@@ -15,16 +15,25 @@ final class LaunchPadController: ObservableObject {
     private var window: NSWindow?
     private var keyMonitor: Any?
     private var flagsMonitor: Any?
+    private var gestureMonitor: Any?
     private var observers: [NSObjectProtocol] = []
     private var catalog: AppCatalog?
+    private var settings: LaunchpadSettings?
 
     /// Set by the content view to handle navigation keys. Return true to consume the event.
     var keyHandler: ((NSEvent) -> Bool)?
+
+    /// Set by the content view to handle trackpad gestures. Return true to consume the event.
+    var gestureHandler: ((NSEvent) -> Bool)?
 
     private(set) var gridLayout = GridLayout(columns: 10, rows: 6)
 
     func attachCatalog(_ catalog: AppCatalog) {
         self.catalog = catalog
+    }
+
+    func attachSettings(_ settings: LaunchpadSettings) {
+        self.settings = settings
     }
 
     func toggle() {
@@ -54,13 +63,14 @@ final class LaunchPadController: ObservableObject {
 
         let content = LaunchPadView()
             .environmentObject(self)
+        var rootView = AnyView(content)
         if let catalog {
-            window.contentView = NSHostingView(
-                rootView: content.environmentObject(catalog)
-            )
-        } else {
-            window.contentView = NSHostingView(rootView: content)
+            rootView = AnyView(content.environmentObject(catalog))
         }
+        if let settings {
+            rootView = AnyView(rootView.environmentObject(settings))
+        }
+        window.contentView = NSHostingView(rootView: rootView)
 
         self.window = window
         installObservers(for: window)
@@ -121,6 +131,13 @@ final class LaunchPadController: ObservableObject {
             self?.deleteMode = event.modifierFlags.contains(.option)
             return event
         }
+        gestureMonitor = NSEvent.addLocalMonitorForEvents(matching: [.swipe, .magnify, .scrollWheel]) { [weak self] event in
+            guard let self, self.window?.isKeyWindow == true else { return event }
+            if let gestureHandler, gestureHandler(event) {
+                return nil
+            }
+            return event
+        }
     }
 
     private func closeWindow() {
@@ -135,6 +152,10 @@ final class LaunchPadController: ObservableObject {
         if let flagsMonitor {
             NSEvent.removeMonitor(flagsMonitor)
             self.flagsMonitor = nil
+        }
+        if let gestureMonitor {
+            NSEvent.removeMonitor(gestureMonitor)
+            self.gestureMonitor = nil
         }
         deleteMode = false
         window?.close()

@@ -15,6 +15,7 @@ struct LaunchPadApp: App {
         Settings {
             SettingsView()
                 .environmentObject(state)
+                .environmentObject(state.settings)
         }
     }
 }

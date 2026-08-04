@@ -5,11 +5,15 @@ import SwiftUI
 struct LaunchPadView: View {
     @EnvironmentObject private var controller: LaunchPadController
     @EnvironmentObject private var catalog: AppCatalog
+    @EnvironmentObject private var settings: LaunchpadSettings
     @State private var appeared = false
     @State private var selection = GridSelection.zero
     @State private var pages: [[AppItem]] = []
     @State private var searchText = ""
     @State private var pendingActionApp: AppItem?
+    @State private var pinchScale: CGFloat = 1
+    @State private var pinchAccum: CGFloat = 0
+    @State private var swipeDelta: CGFloat = 0
     @FocusState private var searchFocused: Bool
 
     private var filteredApps: [AppItem] {
@@ -49,16 +53,20 @@ struct LaunchPadView: View {
                 Spacer()
             }
             .opacity(appeared ? 1 : 0)
-            .scaleEffect(appeared ? 1 : 1.12)
+            .scaleEffect(appeared ? 1 * pinchScale : 1.12 * pinchScale)
         }
         .onAppear {
             rebuildPages()
             controller.keyHandler = { event in
                 handleKey(event)
             }
+            controller.gestureHandler = { event in
+                handleGesture(event)
+            }
         }
         .onDisappear {
             controller.keyHandler = nil
+            controller.gestureHandler = nil
         }
         .onReceive(catalog.$apps) { _ in
             rebuildPages()
@@ -132,6 +140,65 @@ struct LaunchPadView: View {
             pageCounts: pages.map(\.count),
             columns: controller.gridLayout.columns
         )
+    }
+
+    private func handleGesture(_ event: NSEvent) -> Bool {
+        switch event.type {
+        case .swipe:
+            guard settings.swipeEnabled else { return false }
+            if abs(event.deltaX) > 0.5 {
+                move(event.deltaX < 0 ? .right : .left)
+            }
+            return true
+        case .magnify:
+            guard settings.pinchEnabled else { return false }
+            handlePinch(event)
+            return true
+        case .scrollWheel:
+            guard settings.swipeEnabled, event.momentumPhase == [] else { return false }
+            if event.phase.contains(.began) {
+                swipeDelta = 0
+            }
+            if event.phase.contains(.changed) {
+                swipeDelta += event.scrollingDeltaX
+            }
+            if event.phase.contains(.ended) {
+                if abs(swipeDelta) > 50 {
+                    move(swipeDelta < 0 ? .right : .left)
+                }
+                swipeDelta = 0
+                return true
+            }
+            if event.phase == [] {
+                if abs(event.scrollingDeltaX) > abs(event.scrollingDeltaY), abs(event.scrollingDeltaX) > 10 {
+                    move(event.scrollingDeltaX < 0 ? .right : .left)
+                }
+                return true
+            }
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func handlePinch(_ event: NSEvent) {
+        pinchAccum += event.magnification
+        let target = min(max(1 + pinchAccum * 3, 0.5), 1.6)
+        withAnimation(.linear(duration: 0.05)) {
+            pinchScale = target
+        }
+        if event.phase == .ended || event.phase == .cancelled {
+            if pinchAccum < -0.25 {
+                pinchAccum = 0
+                pinchScale = 1
+                controller.hide()
+            } else {
+                pinchAccum = 0
+                withAnimation(.spring(duration: 0.3)) {
+                    pinchScale = 1
+                }
+            }
+        }
     }
 
     private func handleKey(_ event: NSEvent) -> Bool {
