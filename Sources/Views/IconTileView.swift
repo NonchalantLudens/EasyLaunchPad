@@ -74,6 +74,7 @@ struct IconTileView: View {
                 : nil,
             value: entered
         )
+        .transition(.scale(scale: 0.6).combined(with: .opacity))
         .task(id: app.id) {
             icon = await IconStore.shared.icon(for: app.url)
         }

@@ -60,7 +60,7 @@ struct GridPageView: View {
             columns: Array(repeating: GridItem(.fixed(size.tileWidth), spacing: size.spacing), count: columns),
             spacing: size.spacing
         ) {
-            ForEach(Array(page.enumerated()), id: \.offset) { index, app in
+            ForEach(Array(page.enumerated()), id: \.element.id) { index, app in
                 IconTileView(
                     app: app,
                     isSelected: selectedIndex == index,

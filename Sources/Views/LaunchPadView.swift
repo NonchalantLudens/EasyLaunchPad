@@ -115,14 +115,20 @@ struct LaunchPadView: View {
         }
         .onReceive(catalog.$apps) { apps in
             // @Published 在 willSet 发布：此时 catalog.apps 仍是旧值，
-            // 必须用传入的新值重建页面
-            rebuildPages(apps: apps)
+            // 必须用传入的新值重建页面；withAnimation 让其余图标滑动补位
+            withAnimation(.easeInOut(duration: 0.25)) {
+                rebuildPages(apps: apps)
+            }
         }
         .onReceive(controller.$gridLayout) { _ in
-            rebuildPages()
+            withAnimation(.easeInOut(duration: 0.25)) {
+                rebuildPages()
+            }
         }
         .onChange(of: searchText) { _, _ in
-            rebuildPages()
+            withAnimation(.easeInOut(duration: 0.25)) {
+                rebuildPages()
+            }
         }
         .alert(
             "处理应用",
