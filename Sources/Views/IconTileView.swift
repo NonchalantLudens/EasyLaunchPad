@@ -1,6 +1,16 @@
 import AppKit
 import SwiftUI
 
+/// 图标按钮按下反馈：按下瞬间变暗缩小，抬起即恢复。
+struct IconPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(configuration.isPressed ? 0.7 : 1)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
 struct IconTileView: View {
     let app: AppItem
     let isSelected: Bool
@@ -58,7 +68,7 @@ struct IconTileView: View {
                 .contentShape(Rectangle())
                 .compositingGroup()
             }
-            .buttonStyle(.plain)
+            .buttonStyle(IconPressStyle())
             .overlay(alignment: .topTrailing) {
                 if deleteMode {
                     Button(action: onBadge) {

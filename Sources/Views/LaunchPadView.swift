@@ -166,10 +166,14 @@ struct LaunchPadView: View {
     }
 
     private func open(_ app: AppItem) {
-        if let url = app.url {
-            NSWorkspace.shared.open(url)
+        // 延迟到下一次事件循环：先完成按钮按下/抬起，图标高亮瞬间恢复，
+        // 再激活目标应用，避免窗口失活导致高亮卡死
+        DispatchQueue.main.async {
+            if let url = app.url {
+                NSWorkspace.shared.open(url)
+            }
+            controller.hide()
         }
-        controller.hide()
     }
 
     private func openSelected() {
