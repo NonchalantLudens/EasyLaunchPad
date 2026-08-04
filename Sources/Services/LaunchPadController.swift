@@ -10,16 +10,16 @@ extension Notification.Name {
 final class LaunchPadController: ObservableObject {
     @Published private(set) var isVisible = false
     @Published private(set) var deleteMode = false
-    @Published private(set) var enteredFullScreen = false
 
     private var window: LaunchPadWindow?
     private var keyMonitor: Any?
     private var flagsMonitor: Any?
     private var gestureMonitor: Any?
-    private var observers: [NSObjectProtocol] = []
     private var catalog: AppCatalog?
     private var settings: LaunchpadSettings?
-    private var pendingTargetScreen: NSScreen?
+
+    /// The screen the launchpad currently targets (mouse screen at show time).
+    private(set) var currentScreen: NSScreen?
 
     /// Set by the content view to handle navigation keys. Return true to consume the event.
     var keyHandler: ((NSEvent) -> Bool)?
@@ -44,7 +44,7 @@ final class LaunchPadController: ObservableObject {
     func show() {
         guard !isVisible else { return }
         let target = Self.targetScreen()
-        pendingTargetScreen = target
+        currentScreen = target
         gridLayout = GridLayout.layout(for: CGSize(width: target.frame.width, height: target.frame.height - 120))
 
         NSApp.activate(ignoringOtherApps: true)
@@ -57,13 +57,12 @@ final class LaunchPadController: ObservableObject {
                 defer: false,
                 screen: target
             )
-            window.isOpaque = false
-            window.backgroundColor = .clear
+            window.isOpaque = true
+            window.backgroundColor = NSColor(calibratedWhite: 0.08, alpha: 1)
             window.hasShadow = false
-            window.level = .normal
-            window.collectionBehavior = [.fullScreenPrimary, .fullScreenAuxiliary, .canJoinAllSpaces]
+            window.level = .screenSaver
+            window.collectionBehavior = [.canJoinAllSpaces, .stationary]
             self.window = window
-            installObservers(for: window)
             installMonitors()
         }
 
@@ -72,7 +71,6 @@ final class LaunchPadController: ObservableObject {
         window.contentView = makeContentView()
         isVisible = true
         window.makeKeyAndOrderFront(nil)
-        window.toggleFullScreen(nil)
     }
 
     func hide() {
@@ -83,12 +81,7 @@ final class LaunchPadController: ObservableObject {
 
     /// Called by the view after its exit animation finishes.
     func finishHide() {
-        guard let window else { return }
-        if window.styleMask.contains(.fullScreen) {
-            window.toggleFullScreen(nil)
-        } else {
-            hideWindow()
-        }
+        hideWindow()
     }
 
     /// The screen under the mouse cursor; falls back to the main screen.
@@ -110,28 +103,6 @@ final class LaunchPadController: ObservableObject {
             root = AnyView(root.environmentObject(settings))
         }
         return NSHostingView(rootView: root)
-    }
-
-    private func installObservers(for window: NSWindow) {
-        let enter = NotificationCenter.default.addObserver(
-            forName: NSWindow.didEnterFullScreenNotification,
-            object: window,
-            queue: .main
-        ) { [weak self] _ in
-            guard let self, let target = self.pendingTargetScreen else { return }
-            if window.frame != target.frame {
-                window.setFrame(target.frame, display: true)
-            }
-            self.enteredFullScreen = true
-        }
-        let exit = NotificationCenter.default.addObserver(
-            forName: NSWindow.didExitFullScreenNotification,
-            object: window,
-            queue: .main
-        ) { [weak self] _ in
-            self?.hideWindow()
-        }
-        observers = [enter, exit]
     }
 
     private func installMonitors() {
@@ -163,7 +134,6 @@ final class LaunchPadController: ObservableObject {
     private func hideWindow() {
         window?.orderOut(nil)
         deleteMode = false
-        enteredFullScreen = false
         window?.contentView = nil
     }
 }

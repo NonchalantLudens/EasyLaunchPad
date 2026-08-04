@@ -14,6 +14,7 @@ struct LaunchPadView: View {
     @State private var pages: [[AppItem]] = []
     @State private var searchText = ""
     @State private var pendingActionApp: AppItem?
+    @State private var wallpaper: NSImage?
     @State private var pinchScale: CGFloat = 1
     @State private var pinchAccum: CGFloat = 0
     @State private var swipeDelta: CGFloat = 0
@@ -36,10 +37,15 @@ struct LaunchPadView: View {
 
     var body: some View {
         ZStack {
-            VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
-                .ignoresSafeArea()
+            if let wallpaper {
+                Image(nsImage: wallpaper)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .ignoresSafeArea()
+                    .opacity(bgAppeared ? 1 : 0)
+            }
             LinearGradient(
-                colors: [.black.opacity(0.45), .black.opacity(0.35)],
+                colors: [.black.opacity(0.4), .black.opacity(0.3)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -85,19 +91,22 @@ struct LaunchPadView: View {
             controller.gestureHandler = { event in
                 handleGesture(event)
             }
-        }
-        .onDisappear {
-            controller.keyHandler = nil
-            controller.gestureHandler = nil
-        }
-        .onReceive(controller.$enteredFullScreen) { entered in
-            guard entered, !exiting else { return }
+            let screen = controller.currentScreen ?? NSScreen.main
+            if let screen {
+                WallpaperStore.shared.load(for: screen) { image in
+                    wallpaper = image
+                }
+            }
             withAnimation(.easeOut(duration: 0.25)) {
                 bgAppeared = true
             }
             withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
                 appeared = true
             }
+        }
+        .onDisappear {
+            controller.keyHandler = nil
+            controller.gestureHandler = nil
         }
         .onChange(of: controller.deleteMode) { _, enabled in
             if enabled {

@@ -12,6 +12,7 @@ final class AppState: ObservableObject {
 
     init() {
         catalog.refresh()
+        WallpaperStore.shared.preloadMainScreen()
         controller.attachCatalog(catalog)
         controller.attachSettings(settings)
         shortcuts = ShortcutManager(keyCode: settings.hotkeyKeyCode, modifiers: settings.hotkeyModifiers) { [weak self] in
