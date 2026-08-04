@@ -2,7 +2,7 @@ import AppKit
 
 // Finder 窗口 640x400（点），背景图 1:1 像素。
 // 实测：Finder 的 item position 即图标中心。
-// 图标中心：LaunchPad.app (140,120)，Applications (420,120)；箭头在 y=120。
+// 图标中心：LaunchPad.app (140,220)，Applications (420,220)；箭头在 y=220。
 let W: Int = 640
 let H: Int = 400
 
@@ -34,25 +34,25 @@ NSGradient(colors: [
 // 两图标之间的引导箭头（深色，指向右侧 Applications）
 let arrowColor = NSColor(calibratedRed: 0.20, green: 0.24, blue: 0.34, alpha: 0.9)
 let arrow = NSBezierPath()
-arrow.move(to: NSPoint(x: 184, y: 120))
-arrow.line(to: NSPoint(x: 386, y: 120))
+arrow.move(to: NSPoint(x: 184, y: 220))
+arrow.line(to: NSPoint(x: 386, y: 220))
 arrowColor.setStroke()
 arrow.lineWidth = 5
 arrow.lineCapStyle = .round
 arrow.stroke()
 
 let head = NSBezierPath()
-head.move(to: NSPoint(x: 390, y: 120))
-head.line(to: NSPoint(x: 370, y: 108))
-head.move(to: NSPoint(x: 390, y: 120))
-head.line(to: NSPoint(x: 370, y: 132))
+head.move(to: NSPoint(x: 390, y: 220))
+head.line(to: NSPoint(x: 370, y: 208))
+head.move(to: NSPoint(x: 390, y: 220))
+head.line(to: NSPoint(x: 370, y: 232))
 arrowColor.setStroke()
 head.lineWidth = 5
 head.lineCapStyle = .round
 head.lineJoinStyle = .round
 head.stroke()
 
-// 下方简单文字提醒（图标标签之下，y=35）
+// 下方简单文字提醒（图标标签之下留足空间，y=60）
 func drawText(_ string: String, center: NSPoint, fontSize: CGFloat, color: NSColor) {
     let attrs: [NSAttributedString.Key: Any] = [
         .font: NSFont.systemFont(ofSize: fontSize, weight: .medium),
@@ -63,7 +63,7 @@ func drawText(_ string: String, center: NSPoint, fontSize: CGFloat, color: NSCol
     attr.draw(at: NSPoint(x: center.x - s.width / 2, y: center.y - s.height / 2))
 }
 drawText("将 LaunchPad 拖入 Applications 文件夹以安装",
-         center: NSPoint(x: 320, y: 35), fontSize: 15,
+         center: NSPoint(x: 320, y: 60), fontSize: 15,
          color: NSColor(calibratedRed: 0.20, green: 0.24, blue: 0.34, alpha: 1))
 
 NSGraphicsContext.restoreGraphicsState()
