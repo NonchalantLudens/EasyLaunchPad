@@ -10,6 +10,10 @@
 	<string>LaunchPad</string>
 	<key>CFBundleExecutable</key>
 	<string>LaunchPad</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.launchpad.app</string>
 	<key>CFBundleInfoDictionaryVersion</key>
