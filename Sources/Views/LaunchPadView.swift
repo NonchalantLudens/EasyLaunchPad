@@ -63,7 +63,7 @@ struct LaunchPadView: View {
                     columns: controller.gridLayout.columns,
                     highlight: searchText.trimmingCharacters(in: .whitespaces),
                     deleteMode: controller.deleteMode,
-                    entered: appeared && !exiting,
+                    entered: appeared,
                     exiting: exiting,
                     jigglePhase: jigglePhase,
                     onSelect: open,
@@ -129,8 +129,7 @@ struct LaunchPadView: View {
         .onReceive(NotificationCenter.default.publisher(for: .launchPadWillHide)) { _ in
             withAnimation(.easeOut(duration: 0.22)) {
                 exiting = true
-                appeared = false
-                // 背景保持可见，避免露出窗口底色导致黑屏
+                // entered/appeared 保持 true：退出只驱动 exiting 动画，避免入场动画回放闪烁
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) {
                 controller.finishHide()
