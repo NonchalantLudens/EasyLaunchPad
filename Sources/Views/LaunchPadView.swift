@@ -63,7 +63,7 @@ struct LaunchPadView: View {
                     .frame(height: 90)
             }
             .overlay(alignment: .bottom) {
-                if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+                if searchText.trimmingCharacters(in: .whitespaces).isEmpty, pages.count > 1 {
                     PageDotsView(
                         pageCount: pages.count,
                         currentPage: selection.pageIndex
