@@ -112,6 +112,9 @@ struct LaunchPadView: View {
         .onReceive(catalog.$apps) { _ in
             rebuildPages()
         }
+        .onReceive(controller.$gridLayout) { _ in
+            rebuildPages()
+        }
         .onChange(of: searchText) { _, _ in
             rebuildPages()
         }

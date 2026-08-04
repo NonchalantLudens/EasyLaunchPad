@@ -1,5 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
+import Combine
 import SwiftUI
 
 @MainActor
@@ -13,6 +14,7 @@ final class LaunchPadController: ObservableObject {
     private var gestureMonitor: Any?
     private var catalog: AppCatalog?
     private var settings: LaunchpadSettings?
+    private var cancellables: Set<AnyCancellable> = []
 
     /// The screen the launchpad currently targets (mouse screen at show time).
     private(set) var currentScreen: NSScreen?
@@ -23,7 +25,7 @@ final class LaunchPadController: ObservableObject {
     /// Set by the content view to handle trackpad gestures. Return true to consume the event.
     var gestureHandler: ((NSEvent) -> Bool)?
 
-    private(set) var gridLayout = GridLayout(columns: 10, rows: 6)
+    @Published private(set) var gridLayout = GridLayout(columns: 10, rows: 6)
 
     func attachCatalog(_ catalog: AppCatalog) {
         self.catalog = catalog
@@ -31,6 +33,11 @@ final class LaunchPadController: ObservableObject {
 
     func attachSettings(_ settings: LaunchpadSettings) {
         self.settings = settings
+        settings.$iconSize
+            .sink { [weak self] _ in
+                self?.recomputeGridLayout()
+            }
+            .store(in: &cancellables)
     }
 
     func toggle() {
@@ -41,12 +48,7 @@ final class LaunchPadController: ObservableObject {
         guard !isVisible else { return }
         let target = Self.targetScreen()
         currentScreen = target
-        let size = settings?.iconSize ?? .medium
-        gridLayout = GridLayout.layout(
-            for: CGSize(width: target.frame.width, height: target.frame.height - 120),
-            itemWidth: size.gridItemWidth,
-            itemHeight: size.gridItemHeight
-        )
+        recomputeGridLayout()
 
         NSApp.activate(ignoringOtherApps: true)
 
@@ -99,6 +101,16 @@ final class LaunchPadController: ObservableObject {
         return NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) }
             ?? NSScreen.main
             ?? NSScreen.screens.first!
+    }
+
+    private func recomputeGridLayout() {
+        guard let target = currentScreen else { return }
+        let size = settings?.iconSize ?? .medium
+        gridLayout = GridLayout.layout(
+            for: CGSize(width: target.frame.width, height: target.frame.height - 120),
+            itemWidth: size.gridItemWidth,
+            itemHeight: size.gridItemHeight
+        )
     }
 
     private func makeContentView() -> NSHostingView<AnyView> {
