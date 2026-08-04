@@ -36,7 +36,7 @@ struct GridPagesView: View {
                 }
             }
             .offset(x: -CGFloat(selection.pageIndex) * geo.size.width)
-            .animation(.easeInOut(duration: 0.3), value: selection.pageIndex)
+            .animation(.easeInOut(duration: 0.18), value: selection.pageIndex)
         }
     }
 }
