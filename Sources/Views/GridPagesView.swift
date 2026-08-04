@@ -4,6 +4,7 @@ struct GridPagesView: View {
     let pages: [[AppItem]]
     let selection: GridSelection
     let columns: Int
+    let highlight: String
     let onSelect: (AppItem) -> Void
 
     var body: some View {
@@ -13,6 +14,8 @@ struct GridPagesView: View {
                     GridPageView(
                         page: page,
                         columns: columns,
+                        highlight: highlight,
+                        pageIndex: index,
                         selectedIndex: selection.pageIndex == index ? selection.itemIndex : nil,
                         onSelect: onSelect
                     )
@@ -28,6 +31,8 @@ struct GridPagesView: View {
 struct GridPageView: View {
     let page: [AppItem]
     let columns: Int
+    let highlight: String
+    let pageIndex: Int
     let selectedIndex: Int?
     let onSelect: (AppItem) -> Void
 
@@ -37,7 +42,12 @@ struct GridPageView: View {
             spacing: 28
         ) {
             ForEach(Array(page.enumerated()), id: \.offset) { index, app in
-                IconTileView(app: app, isSelected: selectedIndex == index) {
+                IconTileView(
+                    app: app,
+                    isSelected: selectedIndex == index,
+                    highlight: highlight,
+                    revealDelay: Double(index / columns) * 0.05
+                ) {
                     onSelect(app)
                 }
             }

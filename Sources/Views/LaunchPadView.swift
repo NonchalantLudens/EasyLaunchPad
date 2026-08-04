@@ -8,6 +8,14 @@ struct LaunchPadView: View {
     @State private var appeared = false
     @State private var selection = GridSelection.zero
     @State private var pages: [[AppItem]] = []
+    @State private var searchText = ""
+    @FocusState private var searchFocused: Bool
+
+    private var filteredApps: [AppItem] {
+        let query = searchText.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return catalog.apps }
+        return catalog.apps.filter { $0.name.localizedCaseInsensitiveContains(query) }
+    }
 
     var body: some View {
         ZStack {
@@ -15,19 +23,26 @@ struct LaunchPadView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
+                SearchBarView(text: $searchText, focused: $searchFocused)
+                    .padding(.top, 56)
+                    .opacity(appeared ? 1 : 0)
                 Spacer()
                 GridPagesView(
                     pages: pages,
                     selection: selection,
                     columns: controller.gridLayout.columns,
+                    highlight: searchText.trimmingCharacters(in: .whitespaces),
                     onSelect: open
                 )
                 .frame(maxHeight: .infinity)
                 Spacer()
-                PageDotsView(
-                    pageCount: pages.count,
-                    currentPage: selection.pageIndex
-                )
+                if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+                    PageDotsView(
+                        pageCount: pages.count,
+                        currentPage: selection.pageIndex
+                    )
+                    .transition(.opacity)
+                }
                 Spacer()
             }
             .opacity(appeared ? 1 : 0)
@@ -45,6 +60,9 @@ struct LaunchPadView: View {
         .onReceive(catalog.$apps) { _ in
             rebuildPages()
         }
+        .onChange(of: searchText) { _, _ in
+            rebuildPages()
+        }
         .onReceive(controller.$enteredFullScreen) { entered in
             guard entered, !appeared else { return }
             withAnimation(.easeOut(duration: 0.4)) { appeared = true }
@@ -58,7 +76,7 @@ struct LaunchPadView: View {
     }
 
     private func rebuildPages() {
-        pages = controller.gridLayout.pages(catalog.apps)
+        pages = controller.gridLayout.pages(filteredApps)
         selection = GridNavigation.clamp(selection, pageCounts: pages.map(\.count))
     }
 
@@ -101,14 +119,26 @@ struct LaunchPadView: View {
             selection = GridNavigation.page(Int.max, pageCounts: pages.map(\.count))
         case UInt16(kVK_Return):
             openSelected()
-        default:
-            if event.modifierFlags.contains(.command),
-               let digit = (event.charactersIgnoringModifiers ?? "").first.flatMap({ $0.wholeNumberValue }),
-               digit > 0 {
-                selection = GridNavigation.page(digit - 1, pageCounts: pages.map(\.count))
+        case UInt16(kVK_Escape):
+            if !searchText.isEmpty {
+                searchText = ""
+                searchFocused = false
+            } else {
+                controller.hide()
+            }
+        case UInt16(kVK_ANSI_F):
+            if event.modifierFlags.contains(.command) {
+                searchFocused = true
             } else {
                 return false
             }
+        default:
+            let modifiers = event.modifierFlags.intersection([.command, .control, .option])
+            guard modifiers.isEmpty,
+                  let chars = event.charactersIgnoringModifiers,
+                  !chars.isEmpty else { return false }
+            searchFocused = true
+            searchText += chars
         }
         return true
     }
