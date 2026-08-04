@@ -55,27 +55,30 @@ struct GridPageView: View {
     let onBadge: (AppItem) -> Void
 
     var body: some View {
-        LazyVGrid(
-            columns: Array(repeating: GridItem(.fixed(size.tileWidth), spacing: size.spacing), count: columns),
-            spacing: size.spacing
-        ) {
-            ForEach(Array(page.enumerated()), id: \.offset) { index, app in
-                IconTileView(
-                    app: app,
-                    isSelected: selectedIndex == index,
-                    highlight: highlight,
-                    jiggle: deleteMode
-                        ? sin(jigglePhase + Double(index) * 0.7) * 1.2
-                        : 0,
-                    deleteMode: deleteMode,
-                    size: size,
-                    entered: entered,
-                    revealDelay: Double(index / columns) * 0.04,
-                    animationEnabled: animationEnabled,
-                    action: { onSelect(app) },
-                    onBadge: { onBadge(app) }
-                )
+        ZStack {
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.fixed(size.tileWidth), spacing: size.spacing), count: columns),
+                spacing: size.spacing
+            ) {
+                ForEach(Array(page.enumerated()), id: \.offset) { index, app in
+                    IconTileView(
+                        app: app,
+                        isSelected: selectedIndex == index,
+                        highlight: highlight,
+                        jiggle: deleteMode
+                            ? sin(jigglePhase + Double(index) * 0.7) * 1.2
+                            : 0,
+                        deleteMode: deleteMode,
+                        size: size,
+                        entered: entered,
+                        revealDelay: Double(index / columns) * 0.04,
+                        animationEnabled: animationEnabled,
+                        action: { onSelect(app) },
+                        onBadge: { onBadge(app) }
+                    )
+                }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

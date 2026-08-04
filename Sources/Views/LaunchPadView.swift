@@ -174,6 +174,15 @@ struct LaunchPadView: View {
         )
     }
 
+    /// 直接切换页面（左右键 / 滑动手势）。
+    private func switchPage(_ direction: GridDirection) {
+        guard direction == .left || direction == .right else { return }
+        let newPage = selection.pageIndex + (direction == .right ? 1 : -1)
+        guard pages.indices.contains(newPage) else { return }
+        selection.pageIndex = newPage
+        selection.itemIndex = min(selection.itemIndex, max(0, pages[newPage].count - 1))
+    }
+
     private func handleKey(_ event: NSEvent) -> Bool {
         if searchFocused {
             if event.keyCode == UInt16(kVK_Escape) {
@@ -188,9 +197,9 @@ struct LaunchPadView: View {
 
         switch event.keyCode {
         case UInt16(kVK_LeftArrow):
-            move(.left)
+            switchPage(.left)
         case UInt16(kVK_RightArrow):
-            move(.right)
+            switchPage(.right)
         case UInt16(kVK_UpArrow):
             move(.up)
         case UInt16(kVK_DownArrow):
@@ -231,7 +240,7 @@ struct LaunchPadView: View {
         case .swipe:
             guard settings.swipeEnabled else { return false }
             if abs(event.deltaX) > 0.5 {
-                move(event.deltaX < 0 ? .right : .left)
+                switchPage(event.deltaX < 0 ? .right : .left)
             }
             return true
         case .magnify:
@@ -248,14 +257,14 @@ struct LaunchPadView: View {
             }
             if event.phase.contains(.ended) {
                 if abs(swipeDelta) > 50 {
-                    move(swipeDelta < 0 ? .right : .left)
+                    switchPage(swipeDelta < 0 ? .right : .left)
                 }
                 swipeDelta = 0
                 return true
             }
             if event.phase == [] {
                 if abs(event.scrollingDeltaX) > abs(event.scrollingDeltaY), abs(event.scrollingDeltaX) > 10 {
-                    move(event.scrollingDeltaX < 0 ? .right : .left)
+                    switchPage(event.scrollingDeltaX < 0 ? .right : .left)
                 }
                 return true
             }

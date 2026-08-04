@@ -44,6 +44,19 @@ final class GridLayoutTests: XCTestCase {
         let layout = GridLayout(columns: 3, rows: 2)
         XCTAssertEqual(layout.pageCounts(Array(0..<7)), [6, 1])
     }
+
+    func testMultiPageWithExtraLargeLevel() {
+        // 30 个应用 + 特大图标（每页 8x3=24）→ 2 页
+        let layout = GridLayout.layout(
+            for: CGSize(width: 2048, height: 1032),
+            itemWidth: IconSizeLevel.extraLarge.gridItemWidth,
+            itemHeight: IconSizeLevel.extraLarge.gridItemHeight
+        )
+        XCTAssertEqual(layout.perPage, 24)
+        let pages = layout.pages(Array(0..<30))
+        XCTAssertEqual(pages.count, 2)
+        XCTAssertEqual(pages.map(\.count), [24, 6])
+    }
 }
 
 final class GridNavigationTests: XCTestCase {

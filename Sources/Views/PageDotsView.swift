@@ -5,12 +5,13 @@ struct PageDotsView: View {
     let currentPage: Int
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             ForEach(0..<pageCount, id: \.self) { index in
                 Circle()
-                    .fill(.white.opacity(index == currentPage ? 0.9 : 0.35))
-                    .frame(width: 8, height: 8)
-                    .scaleEffect(index == currentPage ? 1.15 : 1)
+                    .fill(.white.opacity(index == currentPage ? 1 : 0.4))
+                    .frame(width: index == currentPage ? 11 : 9, height: index == currentPage ? 11 : 9)
+                    .shadow(color: .black.opacity(0.4), radius: 1, y: 1)
+                    .animation(.easeInOut(duration: 0.2), value: currentPage)
             }
         }
         .padding(.vertical, 20)
