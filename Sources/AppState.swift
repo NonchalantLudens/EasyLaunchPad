@@ -17,10 +17,6 @@ final class AppState: ObservableObject {
     init() {
         catalog.refresh()
         WallpaperStore.shared.preloadMainScreen()
-        let urls = catalog.apps.compactMap(\.url)
-        Task.detached(priority: .background) {
-            await IconStore.shared.prewarm(urls: urls)
-        }
         controller.attachCatalog(catalog)
         controller.attachSettings(settings)
         shortcuts = ShortcutManager(keyCode: settings.hotkeyKeyCode, modifiers: settings.hotkeyModifiers) { [weak self] in
@@ -33,6 +29,17 @@ final class AppState: ObservableObject {
             .sink { [weak self] keyCode, modifiers in
                 guard let self else { return }
                 self.settings.hotkeyConflict = !(self.shortcuts?.register(keyCode: keyCode, modifiers: modifiers) ?? true)
+            }
+            .store(in: &cancellables)
+        // 后台扫描完成后（首次发布非空列表）再预热图标
+        catalog.$apps
+            .filter { !$0.isEmpty }
+            .first()
+            .sink { apps in
+                let urls = apps.compactMap(\.url)
+                Task.detached(priority: .background) {
+                    await IconStore.shared.prewarm(urls: urls)
+                }
             }
             .store(in: &cancellables)
     }

@@ -108,8 +108,9 @@ struct LaunchPadView: View {
             jiggleTimer = nil
             jigglePhase = 0
             if enabled {
-                jiggleTimer = Timer.scheduledTimer(withTimeInterval: 0.033, repeats: true) { _ in
-                    jigglePhase += 0.45
+                // 20fps 抖动驱动，降低全网格重渲染开销
+                jiggleTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+                    jigglePhase += 0.7
                 }
             }
         }

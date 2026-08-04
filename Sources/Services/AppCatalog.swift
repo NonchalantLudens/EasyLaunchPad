@@ -8,31 +8,59 @@ final class AppCatalog: ObservableObject {
 
     private var manualURLs: [URL] = []
     private var trashedIDs: Set<String> = []
-    private let workspace = NSWorkspace.shared
     private let selfBundleID = Bundle.main.bundleIdentifier ?? ""
+    private var refreshScheduled = false
 
     init() {
         hiddenRecords = LaunchpadStore.loadHiddenApps()
         manualURLs = LaunchpadStore.loadManualURLs()
     }
 
+    /// 合并同一事件循环内的多次刷新，目录扫描在后台执行，
+    /// 主线程只做过滤合并与发布，避免动画期间卡顿。
     func refresh() {
-        let hiddenIDs = Set(hiddenRecords.map(\.id))
-        var byID: [String: AppItem] = [:]
+        guard !refreshScheduled else { return }
+        refreshScheduled = true
+        Task { @MainActor in
+            refreshScheduled = false
+            await performRefresh()
+        }
+    }
 
-        for item in scanApplicationsFolders() where !hiddenIDs.contains(item.id) && !trashedIDs.contains(item.id) {
+    @MainActor
+    private func performRefresh() async {
+        let hiddenIDs = Set(hiddenRecords.map(\.id))
+        let trashed = trashedIDs
+        let manual = manualURLs
+        let selfID = selfBundleID
+        let newApps = await Task.detached(priority: .userInitiated) {
+            Self.buildApps(hiddenIDs: hiddenIDs, trashed: trashed, manual: manual, selfID: selfID)
+        }.value
+        // 内容未变化时不发布，避免无谓动画
+        if apps != newApps {
+            apps = newApps
+        }
+    }
+
+    private nonisolated static func buildApps(
+        hiddenIDs: Set<String>,
+        trashed: Set<String>,
+        manual: [URL],
+        selfID: String
+    ) -> [AppItem] {
+        var byID: [String: AppItem] = [:]
+        for item in scanApplicationsFolders() where !hiddenIDs.contains(item.id) && !trashed.contains(item.id) {
             byID[item.id] = item
         }
-        for url in manualURLs {
+        for url in manual {
             guard let bundle = Bundle(url: url) else { continue }
             let id = bundle.bundleIdentifier ?? url.deletingPathExtension().lastPathComponent
-            guard !hiddenIDs.contains(id), !trashedIDs.contains(id), byID[id] == nil else { continue }
+            guard !hiddenIDs.contains(id), !trashed.contains(id), byID[id] == nil else { continue }
             let name = displayName(for: bundle, fallback: url.deletingPathExtension().lastPathComponent)
             byID[id] = AppItem(id: id, name: name, url: url)
         }
-
-        apps = byID.values
-            .filter { $0.id != selfBundleID }
+        return byID.values
+            .filter { $0.id != selfID }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
@@ -69,9 +97,9 @@ final class AppCatalog: ObservableObject {
         refresh()
     }
 
-    // MARK: - Scanning
+    // MARK: - Scanning (后台执行，非隔离)
 
-    private func scanApplicationsFolders() -> [AppItem] {
+    private nonisolated static func scanApplicationsFolders() -> [AppItem] {
         var dirs: [String] = ["/Applications"]
         let home = NSHomeDirectory()
         dirs.append(home + "/Applications")
@@ -93,7 +121,7 @@ final class AppCatalog: ObservableObject {
         return items
     }
 
-    private func displayName(for bundle: Bundle, fallback: String) -> String {
+    private nonisolated static func displayName(for bundle: Bundle, fallback: String) -> String {
         (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
             ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
             ?? fallback

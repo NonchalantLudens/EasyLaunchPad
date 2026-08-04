@@ -15,8 +15,14 @@ struct IconTileView: View {
     let onBadge: () -> Void
 
     @State private var icon: NSImage?
+    @State private var cachedName: String?
+    @State private var cachedHighlight: String?
+    @State private var cachedAttributed: AttributedString?
 
     private var attributedName: AttributedString {
+        if let cachedAttributed, cachedName == app.name, cachedHighlight == highlight {
+            return cachedAttributed
+        }
         var result = AttributedString(app.name)
         result.font = .system(size: 13, weight: .medium)
         result.foregroundColor = .white
@@ -24,6 +30,9 @@ struct IconTileView: View {
             result[range].font = .system(size: 13, weight: .bold)
             result[range].backgroundColor = .white.opacity(0.25)
         }
+        cachedAttributed = result
+        cachedName = app.name
+        cachedHighlight = highlight
         return result
     }
 
