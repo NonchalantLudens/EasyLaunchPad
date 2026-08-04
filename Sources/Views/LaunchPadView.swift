@@ -112,8 +112,10 @@ struct LaunchPadView: View {
                 }
             }
         }
-        .onReceive(catalog.$apps) { _ in
-            rebuildPages()
+        .onReceive(catalog.$apps) { apps in
+            // @Published 在 willSet 发布：此时 catalog.apps 仍是旧值，
+            // 必须用传入的新值重建页面
+            rebuildPages(apps: apps)
         }
         .onReceive(controller.$gridLayout) { _ in
             rebuildPages()
@@ -149,8 +151,9 @@ struct LaunchPadView: View {
         }
     }
 
-    private func rebuildPages() {
-        pages = controller.gridLayout.pages(filteredApps)
+    private func rebuildPages(apps: [AppItem]? = nil) {
+        let source = apps ?? filteredApps
+        pages = controller.gridLayout.pages(source)
         selection = GridNavigation.clamp(selection, pageCounts: pages.map(\.count))
     }
 
@@ -256,7 +259,10 @@ struct LaunchPadView: View {
                 swipeDelta = 0
             }
             if event.phase.contains(.changed) {
-                swipeDelta += event.scrollingDeltaX
+                // 主轴向（水平或垂直）累积，鼠标滚轮以垂直为主
+                swipeDelta += abs(event.scrollingDeltaX) >= abs(event.scrollingDeltaY)
+                    ? event.scrollingDeltaX
+                    : event.scrollingDeltaY
             }
             if event.phase.contains(.ended) {
                 if abs(swipeDelta) > 50 {
@@ -266,8 +272,12 @@ struct LaunchPadView: View {
                 return true
             }
             if event.phase == [] {
-                if abs(event.scrollingDeltaX) > abs(event.scrollingDeltaY), abs(event.scrollingDeltaX) > 10 {
-                    switchPage(event.scrollingDeltaX < 0 ? .right : .left)
+                // 离散滚轮（鼠标）：主轴向判定
+                let dx = abs(event.scrollingDeltaX)
+                let dy = abs(event.scrollingDeltaY)
+                if max(dx, dy) > 5 {
+                    let delta = dx >= dy ? event.scrollingDeltaX : event.scrollingDeltaY
+                    switchPage(delta < 0 ? .right : .left)
                 }
                 return true
             }
