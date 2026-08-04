@@ -55,7 +55,17 @@ CUSTOMIZED=0
 if osascript -e 'tell application "Finder" to count windows' >/dev/null 2>&1; then
     MOUNT_POINT=$(hdiutil attach -readwrite -noverify -noautoopen "$RAW_DMG" 2>/dev/null | grep 'Volumes' | awk '{print $NF}' || true)
     if [ -n "$MOUNT_POINT" ]; then
-        if osascript <<EOF
+        # 等待 Finder 注册新卷（attach 返回后 Finder 可能尚未识别）
+        REGISTERED=0
+        for i in 1 2 3 4 5; do
+            if osascript -e 'tell application "Finder" to get name of every disk' 2>/dev/null | grep -q "$VOLNAME"; then
+                REGISTERED=1
+                break
+            fi
+            sleep 1
+        done
+        if [ "$REGISTERED" -eq 1 ]; then
+            if osascript <<EOF
 tell application "Finder"
   tell disk "$VOLNAME"
     open
@@ -75,11 +85,14 @@ tell application "Finder"
   end tell
 end tell
 EOF
-        then
-            echo "安装页已定制（背景/图标/窗口尺寸）"
-            CUSTOMIZED=1
+            then
+                echo "安装页已定制（背景/图标/窗口尺寸）"
+                CUSTOMIZED=1
+            else
+                echo "Finder 定制脚本失败，使用默认布局"
+            fi
         else
-            echo "Finder 定制脚本失败，使用默认布局"
+            echo "Finder 未识别新卷，跳过安装页定制"
         fi
         sleep 1
         hdiutil detach -force "$MOUNT_POINT" >/dev/null 2>&1 || true
