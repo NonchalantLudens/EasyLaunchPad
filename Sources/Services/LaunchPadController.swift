@@ -33,9 +33,11 @@ final class LaunchPadController: ObservableObject {
 
     func attachSettings(_ settings: LaunchpadSettings) {
         self.settings = settings
+        // @Published 在 willSet 发布：sink 触发时属性仍是旧值，
+        // 必须使用传入的新值而不是回读属性。
         settings.$iconSize
-            .sink { [weak self] _ in
-                self?.recomputeGridLayout()
+            .sink { [weak self] newSize in
+                self?.recomputeGridLayout(size: newSize)
             }
             .store(in: &cancellables)
     }
@@ -103,13 +105,13 @@ final class LaunchPadController: ObservableObject {
             ?? NSScreen.screens.first!
     }
 
-    private func recomputeGridLayout() {
+    private func recomputeGridLayout(size: IconSizeLevel? = nil) {
         guard let target = currentScreen else { return }
-        let size = settings?.iconSize ?? .medium
+        let level = size ?? settings?.iconSize ?? .medium
         gridLayout = GridLayout.layout(
             for: CGSize(width: target.frame.width, height: target.frame.height - 120),
-            itemWidth: size.gridItemWidth,
-            itemHeight: size.gridItemHeight
+            itemWidth: level.gridItemWidth,
+            itemHeight: level.gridItemHeight
         )
     }
 

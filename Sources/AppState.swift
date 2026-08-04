@@ -4,6 +4,10 @@ import Combine
 
 @MainActor
 final class AppState: ObservableObject {
+    /// 全局单例：菜单栏、设置、热键与 Dock 图标入口共享同一实例，
+    /// 避免多个 AppState 各自持有设置快照导致改动不生效。
+    static let shared = AppState()
+
     let controller = LaunchPadController()
     let catalog = AppCatalog()
     let settings = LaunchpadSettings()

@@ -3,7 +3,7 @@ import SwiftUI
 @main
 struct LaunchPadApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var state = AppState()
+    private let state = AppState.shared
 
     var body: some Scene {
         MenuBarExtra("LaunchPad", systemImage: "square.grid.3x3") {
