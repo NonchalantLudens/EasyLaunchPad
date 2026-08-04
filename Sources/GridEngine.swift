@@ -7,7 +7,7 @@ struct GridLayout: Equatable {
 
     var perPage: Int { columns * rows }
 
-    static func layout(for size: CGSize, itemWidth: CGFloat = 140, itemHeight: CGFloat = 150) -> GridLayout {
+    static func layout(for size: CGSize, itemWidth: CGFloat = 176, itemHeight: CGFloat = 186) -> GridLayout {
         let cols = max(1, Int(floor(size.width / itemWidth)))
         let rows = max(1, Int(floor(size.height / itemHeight)))
         return GridLayout(columns: cols, rows: rows)

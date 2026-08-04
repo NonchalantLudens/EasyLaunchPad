@@ -7,6 +7,7 @@ struct LaunchPadView: View {
     @EnvironmentObject private var catalog: AppCatalog
     @EnvironmentObject private var settings: LaunchpadSettings
     @State private var appeared = false
+    @State private var bgAppeared = false
     @State private var selection = GridSelection.zero
     @State private var pages: [[AppItem]] = []
     @State private var searchText = ""
@@ -25,6 +26,9 @@ struct LaunchPadView: View {
     var body: some View {
         ZStack {
             VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
+                .ignoresSafeArea()
+            Color.black
+                .opacity(bgAppeared ? 0.62 : 0)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -63,6 +67,12 @@ struct LaunchPadView: View {
             controller.gestureHandler = { event in
                 handleGesture(event)
             }
+            withAnimation(.easeOut(duration: 0.25)) {
+                bgAppeared = true
+            }
+            withAnimation(.easeOut(duration: 0.35)) {
+                appeared = true
+            }
         }
         .onDisappear {
             controller.keyHandler = nil
@@ -74,13 +84,12 @@ struct LaunchPadView: View {
         .onChange(of: searchText) { _, _ in
             rebuildPages()
         }
-        .onReceive(controller.$enteredFullScreen) { entered in
-            guard entered, !appeared else { return }
-            withAnimation(.easeOut(duration: 0.4)) { appeared = true }
-        }
         .onReceive(NotificationCenter.default.publisher(for: .launchPadWillHide)) { _ in
-            withAnimation(.easeOut(duration: 0.18)) { appeared = false }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            withAnimation(.easeOut(duration: 0.15)) {
+                appeared = false
+                bgAppeared = false
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.16) {
                 controller.finishHide()
             }
         }
@@ -142,6 +151,59 @@ struct LaunchPadView: View {
         )
     }
 
+    private func handleKey(_ event: NSEvent) -> Bool {
+        if searchFocused {
+            if event.keyCode == UInt16(kVK_Escape) {
+                if !searchText.isEmpty {
+                    searchText = ""
+                }
+                searchFocused = false
+                return true
+            }
+            // 放行给 TextField：删除、光标移动、中文输入法等
+            return false
+        }
+
+        switch event.keyCode {
+        case UInt16(kVK_LeftArrow):
+            move(.left)
+        case UInt16(kVK_RightArrow):
+            move(.right)
+        case UInt16(kVK_UpArrow):
+            move(.up)
+        case UInt16(kVK_DownArrow):
+            move(.down)
+        case UInt16(kVK_Home):
+            selection = GridNavigation.page(0, pageCounts: pages.map(\.count))
+        case UInt16(kVK_End):
+            selection = GridNavigation.page(Int.max, pageCounts: pages.map(\.count))
+        case UInt16(kVK_Return):
+            openSelected()
+        case UInt16(kVK_Escape):
+            if !searchText.isEmpty {
+                searchText = ""
+            } else {
+                controller.hide()
+            }
+        case UInt16(kVK_Delete), UInt16(kVK_ForwardDelete):
+            return false
+        case UInt16(kVK_ANSI_F):
+            if event.modifierFlags.contains(.command) {
+                searchFocused = true
+            } else {
+                return false
+            }
+        default:
+            let modifiers = event.modifierFlags.intersection([.command, .control, .option])
+            guard modifiers.isEmpty,
+                  let chars = event.charactersIgnoringModifiers,
+                  !chars.isEmpty else { return false }
+            searchFocused = true
+            searchText += chars
+        }
+        return true
+    }
+
     private func handleGesture(_ event: NSEvent) -> Bool {
         switch event.type {
         case .swipe:
@@ -199,45 +261,5 @@ struct LaunchPadView: View {
                 }
             }
         }
-    }
-
-    private func handleKey(_ event: NSEvent) -> Bool {
-        switch event.keyCode {
-        case UInt16(kVK_LeftArrow):
-            move(.left)
-        case UInt16(kVK_RightArrow):
-            move(.right)
-        case UInt16(kVK_UpArrow):
-            move(.up)
-        case UInt16(kVK_DownArrow):
-            move(.down)
-        case UInt16(kVK_Home):
-            selection = GridNavigation.page(0, pageCounts: pages.map(\.count))
-        case UInt16(kVK_End):
-            selection = GridNavigation.page(Int.max, pageCounts: pages.map(\.count))
-        case UInt16(kVK_Return):
-            openSelected()
-        case UInt16(kVK_Escape):
-            if !searchText.isEmpty {
-                searchText = ""
-                searchFocused = false
-            } else {
-                controller.hide()
-            }
-        case UInt16(kVK_ANSI_F):
-            if event.modifierFlags.contains(.command) {
-                searchFocused = true
-            } else {
-                return false
-            }
-        default:
-            let modifiers = event.modifierFlags.intersection([.command, .control, .option])
-            guard modifiers.isEmpty,
-                  let chars = event.charactersIgnoringModifiers,
-                  !chars.isEmpty else { return false }
-            searchFocused = true
-            searchText += chars
-        }
-        return true
     }
 }

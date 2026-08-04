@@ -9,16 +9,16 @@ extension Notification.Name {
 @MainActor
 final class LaunchPadController: ObservableObject {
     @Published private(set) var isVisible = false
-    @Published private(set) var enteredFullScreen = false
     @Published private(set) var deleteMode = false
 
-    private var window: NSWindow?
+    private var window: LaunchPadWindow?
     private var keyMonitor: Any?
     private var flagsMonitor: Any?
     private var gestureMonitor: Any?
     private var observers: [NSObjectProtocol] = []
     private var catalog: AppCatalog?
     private var settings: LaunchpadSettings?
+    private var pendingTargetScreen: NSScreen?
 
     /// Set by the content view to handle navigation keys. Return true to consume the event.
     var keyHandler: ((NSEvent) -> Bool)?
@@ -42,39 +42,34 @@ final class LaunchPadController: ObservableObject {
 
     func show() {
         guard !isVisible else { return }
-        guard let screen = NSScreen.main ?? NSScreen.screens.first else { return }
+        let target = Self.targetScreen()
+        pendingTargetScreen = target
+        gridLayout = GridLayout.layout(for: CGSize(width: target.frame.width, height: target.frame.height - 120))
 
-        isVisible = true
         NSApp.activate(ignoringOtherApps: true)
-        gridLayout = GridLayout.layout(for: CGSize(width: screen.frame.width, height: screen.frame.height - 120))
 
-        let window = LaunchPadWindow(
-            contentRect: screen.frame,
-            styleMask: [.borderless, .fullSizeContentView],
-            backing: .buffered,
-            defer: false,
-            screen: screen
-        )
-        window.isOpaque = false
-        window.backgroundColor = .clear
-        window.hasShadow = false
-        window.level = .normal
-        window.collectionBehavior = [.fullScreenPrimary, .fullScreenAuxiliary, .canJoinAllSpaces]
-
-        let content = LaunchPadView()
-            .environmentObject(self)
-        var rootView = AnyView(content)
-        if let catalog {
-            rootView = AnyView(content.environmentObject(catalog))
+        if window == nil {
+            let window = LaunchPadWindow(
+                contentRect: target.frame,
+                styleMask: [.borderless, .fullSizeContentView],
+                backing: .buffered,
+                defer: false,
+                screen: target
+            )
+            window.isOpaque = false
+            window.backgroundColor = .clear
+            window.hasShadow = false
+            window.level = .normal
+            window.collectionBehavior = [.fullScreenPrimary, .fullScreenAuxiliary, .canJoinAllSpaces]
+            self.window = window
+            installObservers(for: window)
+            installMonitors()
         }
-        if let settings {
-            rootView = AnyView(rootView.environmentObject(settings))
-        }
-        window.contentView = NSHostingView(rootView: rootView)
 
-        self.window = window
-        installObservers(for: window)
-        installKeyMonitor()
+        guard let window else { return }
+        window.setFrame(target.frame, display: true)
+        window.contentView = makeContentView()
+        isVisible = true
         window.makeKeyAndOrderFront(nil)
         window.toggleFullScreen(nil)
     }
@@ -82,7 +77,6 @@ final class LaunchPadController: ObservableObject {
     func hide() {
         guard isVisible else { return }
         isVisible = false
-        enteredFullScreen = false
         NotificationCenter.default.post(name: .launchPadWillHide, object: self)
     }
 
@@ -92,8 +86,29 @@ final class LaunchPadController: ObservableObject {
         if window.styleMask.contains(.fullScreen) {
             window.toggleFullScreen(nil)
         } else {
-            closeWindow()
+            hideWindow()
         }
+    }
+
+    /// The screen under the mouse cursor; falls back to the main screen.
+    private static func targetScreen() -> NSScreen {
+        let mouse = NSEvent.mouseLocation
+        return NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) }
+            ?? NSScreen.main
+            ?? NSScreen.screens.first!
+    }
+
+    private func makeContentView() -> NSHostingView<AnyView> {
+        let content = LaunchPadView()
+            .environmentObject(self)
+        var root = AnyView(content)
+        if let catalog {
+            root = AnyView(content.environmentObject(catalog))
+        }
+        if let settings {
+            root = AnyView(root.environmentObject(settings))
+        }
+        return NSHostingView(rootView: root)
     }
 
     private func installObservers(for window: NSWindow) {
@@ -102,19 +117,22 @@ final class LaunchPadController: ObservableObject {
             object: window,
             queue: .main
         ) { [weak self] _ in
-            self?.enteredFullScreen = true
+            guard let self, let target = self.pendingTargetScreen else { return }
+            if window.frame != target.frame {
+                window.setFrame(target.frame, display: true)
+            }
         }
         let exit = NotificationCenter.default.addObserver(
             forName: NSWindow.didExitFullScreenNotification,
             object: window,
             queue: .main
         ) { [weak self] _ in
-            self?.closeWindow()
+            self?.hideWindow()
         }
         observers = [enter, exit]
     }
 
-    private func installKeyMonitor() {
+    private func installMonitors() {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, self.window?.isKeyWindow == true else { return event }
@@ -140,25 +158,9 @@ final class LaunchPadController: ObservableObject {
         }
     }
 
-    private func closeWindow() {
-        for observer in observers {
-            NotificationCenter.default.removeObserver(observer)
-        }
-        observers = []
-        if let keyMonitor {
-            NSEvent.removeMonitor(keyMonitor)
-            self.keyMonitor = nil
-        }
-        if let flagsMonitor {
-            NSEvent.removeMonitor(flagsMonitor)
-            self.flagsMonitor = nil
-        }
-        if let gestureMonitor {
-            NSEvent.removeMonitor(gestureMonitor)
-            self.gestureMonitor = nil
-        }
+    private func hideWindow() {
+        window?.orderOut(nil)
         deleteMode = false
-        window?.close()
-        window = nil
+        window?.contentView = nil
     }
 }

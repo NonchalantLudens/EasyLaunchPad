@@ -4,9 +4,17 @@ import XCTest
 final class GridLayoutTests: XCTestCase {
     func testLayoutColumnsAndRows() {
         let layout = GridLayout.layout(for: CGSize(width: 1400, height: 900))
-        XCTAssertEqual(layout.columns, 10)
-        XCTAssertEqual(layout.rows, 6)
-        XCTAssertEqual(layout.perPage, 60)
+        XCTAssertEqual(layout.columns, 7)
+        XCTAssertEqual(layout.rows, 4)
+        XCTAssertEqual(layout.perPage, 28)
+    }
+
+    func testLayoutLargeScreen() {
+        // 2048x1152 屏（含搜索栏/圆点预留区）
+        let layout = GridLayout.layout(for: CGSize(width: 2048, height: 1032))
+        XCTAssertEqual(layout.columns, 11)
+        XCTAssertEqual(layout.rows, 5)
+        XCTAssertEqual(layout.perPage, 55)
     }
 
     func testLayoutMinimumOne() {

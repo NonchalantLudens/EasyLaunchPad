@@ -44,8 +44,8 @@ struct GridPageView: View {
 
     var body: some View {
         LazyVGrid(
-            columns: Array(repeating: GridItem(.fixed(110), spacing: 24), count: columns),
-            spacing: 28
+            columns: Array(repeating: GridItem(.fixed(140), spacing: 32), count: columns),
+            spacing: 36
         ) {
             ForEach(Array(page.enumerated()), id: \.offset) { index, app in
                 IconTileView(
