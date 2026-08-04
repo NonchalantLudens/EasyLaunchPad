@@ -21,6 +21,9 @@ struct MenuBarMenuView: View {
             Button("偏好设置…") {
                 NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
             }
+            Button("关于 LaunchPad…") {
+                NSApp.orderFrontStandardAboutPanel(nil)
+            }
             Divider()
             Button("退出 LaunchPad") {
                 NSApp.terminate(nil)

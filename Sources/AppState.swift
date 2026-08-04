@@ -22,11 +22,13 @@ final class AppState: ObservableObject {
         shortcuts = ShortcutManager(keyCode: settings.hotkeyKeyCode, modifiers: settings.hotkeyModifiers) { [weak self] in
             self?.controller.toggle()
         }
+        settings.hotkeyConflict = !(shortcuts?.isRegistered ?? true)
         settings.$hotkeyKeyCode
             .combineLatest(settings.$hotkeyModifiers)
             .dropFirst()
             .sink { [weak self] keyCode, modifiers in
-                self?.shortcuts?.register(keyCode: keyCode, modifiers: modifiers)
+                guard let self else { return }
+                self.settings.hotkeyConflict = !(self.shortcuts?.register(keyCode: keyCode, modifiers: modifiers) ?? true)
             }
             .store(in: &cancellables)
     }

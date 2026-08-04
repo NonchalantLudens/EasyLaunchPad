@@ -8,10 +8,13 @@ final class ShortcutManager {
     private var handlerRef: EventHandlerRef?
     private let onPress: () -> Void
 
+    /// Whether the last registration attempt succeeded (false = conflicts with another app).
+    private(set) var isRegistered = false
+
     init(keyCode: UInt32, modifiers: UInt32 = 0, onPress: @escaping () -> Void) {
         self.onPress = onPress
         installHandler()
-        register(keyCode: keyCode, modifiers: modifiers)
+        isRegistered = register(keyCode: keyCode, modifiers: modifiers)
     }
 
     deinit {
@@ -66,8 +69,12 @@ final class ShortcutManager {
             0,
             &ref
         )
-        guard status == noErr else { return false }
+        guard status == noErr else {
+            isRegistered = false
+            return false
+        }
         eventRef = ref
+        isRegistered = true
         return true
     }
 }
