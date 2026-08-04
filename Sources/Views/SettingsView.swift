@@ -9,6 +9,7 @@ struct SettingsView: View {
         TabView {
             GeneralSettingsView()
                 .environmentObject(settings)
+                .environmentObject(state)
                 .tabItem {
                     Label("通用", systemImage: "gearshape")
                 }

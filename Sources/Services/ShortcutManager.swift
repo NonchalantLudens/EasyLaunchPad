@@ -77,4 +77,12 @@ final class ShortcutManager {
         isRegistered = true
         return true
     }
+
+    func unregister() {
+        if let eventRef {
+            UnregisterEventHotKey(eventRef)
+            self.eventRef = nil
+        }
+        isRegistered = false
+    }
 }

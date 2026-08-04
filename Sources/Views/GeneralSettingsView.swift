@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 
 struct GeneralSettingsView: View {
+    @EnvironmentObject private var state: AppState
     @EnvironmentObject private var settings: LaunchpadSettings
     @State private var statusText = ""
 
@@ -11,8 +12,10 @@ struct GeneralSettingsView: View {
                 HStack {
                     Text("呼出 / 关闭 LaunchPad")
                     Spacer()
-                    HotkeyRecorderView()
-                        .environmentObject(settings)
+                    HotkeyRecorderView { paused in
+                        state.setHotkeyPaused(paused)
+                    }
+                    .environmentObject(settings)
                 }
                 if settings.hotkeyConflict {
                     Label("快捷键已被其他应用占用，请更换", systemImage: "exclamationmark.triangle.fill")

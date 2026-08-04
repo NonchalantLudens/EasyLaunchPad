@@ -32,4 +32,13 @@ final class AppState: ObservableObject {
             }
             .store(in: &cancellables)
     }
+
+    /// 快捷键录制期间暂停全局热键，避免录制 F 键时触发 LaunchPad。
+    func setHotkeyPaused(_ paused: Bool) {
+        if paused {
+            shortcuts?.unregister()
+        } else {
+            settings.hotkeyConflict = !(shortcuts?.register(keyCode: settings.hotkeyKeyCode, modifiers: settings.hotkeyModifiers) ?? true)
+        }
+    }
 }

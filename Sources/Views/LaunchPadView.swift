@@ -8,6 +8,7 @@ struct LaunchPadView: View {
     @EnvironmentObject private var settings: LaunchpadSettings
     @State private var appeared = false
     @State private var jigglePhase: Double = 0
+    @State private var jiggleTimer: Timer?
     @State private var selection = GridSelection.zero
     @State private var pages: [[AppItem]] = []
     @State private var searchText = ""
@@ -67,6 +68,10 @@ struct LaunchPadView: View {
             .opacity(appeared ? 1 : 0)
             .scaleEffect(appeared ? 1 * pinchScale : 0.98 * pinchScale)
         }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            controller.hide()
+        }
         .onAppear {
             rebuildPages()
             controller.keyHandler = { event in
@@ -88,16 +93,16 @@ struct LaunchPadView: View {
         .onDisappear {
             controller.keyHandler = nil
             controller.gestureHandler = nil
+            jiggleTimer?.invalidate()
+            jiggleTimer = nil
         }
         .onChange(of: controller.deleteMode) { _, enabled in
+            jiggleTimer?.invalidate()
+            jiggleTimer = nil
+            jigglePhase = 0
             if enabled {
-                jigglePhase = 0
-                withAnimation(.easeInOut(duration: 0.11).repeatForever(autoreverses: true)) {
-                    jigglePhase = 1
-                }
-            } else {
-                withAnimation(.spring(duration: 0.2)) {
-                    jigglePhase = 0
+                jiggleTimer = Timer.scheduledTimer(withTimeInterval: 0.033, repeats: true) { _ in
+                    jigglePhase += 0.45
                 }
             }
         }
