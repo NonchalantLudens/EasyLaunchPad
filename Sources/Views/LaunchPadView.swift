@@ -7,8 +7,6 @@ struct LaunchPadView: View {
     @EnvironmentObject private var catalog: AppCatalog
     @EnvironmentObject private var settings: LaunchpadSettings
     @State private var appeared = false
-    @State private var bgAppeared = false
-    @State private var exiting = false
     @State private var jigglePhase: Double = 0
     @State private var selection = GridSelection.zero
     @State private var pages: [[AppItem]] = []
@@ -26,15 +24,6 @@ struct LaunchPadView: View {
         return catalog.apps.filter { $0.name.localizedCaseInsensitiveContains(query) }
     }
 
-    private var surfaceScale: CGFloat {
-        if exiting { return 0.95 * pinchScale }
-        return appeared ? 1 * pinchScale : 0.92 * pinchScale
-    }
-
-    private var surfaceOpacity: Double {
-        exiting ? 0 : (appeared ? 1 : 0)
-    }
-
     var body: some View {
         ZStack {
             if let wallpaper {
@@ -42,7 +31,6 @@ struct LaunchPadView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .ignoresSafeArea()
-                    .opacity(bgAppeared ? 1 : 0)
             }
             LinearGradient(
                 colors: [.black.opacity(0.4), .black.opacity(0.3)],
@@ -50,12 +38,10 @@ struct LaunchPadView: View {
                 endPoint: .bottom
             )
             .ignoresSafeArea()
-            .opacity(bgAppeared ? 1 : 0)
 
             VStack(spacing: 0) {
                 SearchBarView(text: $searchText, focused: $searchFocused)
                     .padding(.top, 56)
-                    .opacity(appeared ? 1 : 0)
                 Spacer()
                 GridPagesView(
                     pages: pages,
@@ -63,8 +49,6 @@ struct LaunchPadView: View {
                     columns: controller.gridLayout.columns,
                     highlight: searchText.trimmingCharacters(in: .whitespaces),
                     deleteMode: controller.deleteMode,
-                    entered: appeared,
-                    exiting: exiting,
                     jigglePhase: jigglePhase,
                     onSelect: open,
                     onBadge: { pendingActionApp = $0 }
@@ -80,8 +64,8 @@ struct LaunchPadView: View {
                 }
                 Spacer()
             }
-            .opacity(surfaceOpacity)
-            .scaleEffect(surfaceScale)
+            .opacity(appeared ? 1 : 0)
+            .scaleEffect(appeared ? 1 * pinchScale : 0.98 * pinchScale)
         }
         .onAppear {
             rebuildPages()
@@ -97,10 +81,7 @@ struct LaunchPadView: View {
                     wallpaper = image
                 }
             }
-            withAnimation(.easeOut(duration: 0.25)) {
-                bgAppeared = true
-            }
-            withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
+            withAnimation(.easeOut(duration: 0.3)) {
                 appeared = true
             }
         }
@@ -125,15 +106,6 @@ struct LaunchPadView: View {
         }
         .onChange(of: searchText) { _, _ in
             rebuildPages()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .launchPadWillHide)) { _ in
-            withAnimation(.easeOut(duration: 0.22)) {
-                exiting = true
-                // entered/appeared 保持 true：退出只驱动 exiting 动画，避免入场动画回放闪烁
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) {
-                controller.finishHide()
-            }
         }
         .confirmationDialog(
             pendingActionApp.map { "处理「\($0.name)」" } ?? "",

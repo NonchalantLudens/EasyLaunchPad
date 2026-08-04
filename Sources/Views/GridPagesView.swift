@@ -6,8 +6,6 @@ struct GridPagesView: View {
     let columns: Int
     let highlight: String
     let deleteMode: Bool
-    let entered: Bool
-    let exiting: Bool
     let jigglePhase: Double
     let onSelect: (AppItem) -> Void
     let onBadge: (AppItem) -> Void
@@ -22,8 +20,6 @@ struct GridPagesView: View {
                         highlight: highlight,
                         pageIndex: index,
                         deleteMode: deleteMode,
-                        entered: entered,
-                        exiting: exiting,
                         jigglePhase: jigglePhase,
                         selectedIndex: selection.pageIndex == index ? selection.itemIndex : nil,
                         onSelect: onSelect,
@@ -44,8 +40,6 @@ struct GridPageView: View {
     let highlight: String
     let pageIndex: Int
     let deleteMode: Bool
-    let entered: Bool
-    let exiting: Bool
     let jigglePhase: Double
     let selectedIndex: Int?
     let onSelect: (AppItem) -> Void
@@ -61,9 +55,6 @@ struct GridPageView: View {
                     app: app,
                     isSelected: selectedIndex == index,
                     highlight: highlight,
-                    revealDelay: Double(index / columns) * 0.04,
-                    entered: entered,
-                    exiting: exiting,
                     jiggle: deleteMode
                         ? sin(jigglePhase * 2 * .pi + Double(index) * 0.7) * 2.2
                         : 0,

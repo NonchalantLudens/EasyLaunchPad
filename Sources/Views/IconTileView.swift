@@ -5,9 +5,6 @@ struct IconTileView: View {
     let app: AppItem
     let isSelected: Bool
     let highlight: String
-    let revealDelay: Double
-    let entered: Bool
-    let exiting: Bool
     let jiggle: Double
     let deleteMode: Bool
     let action: () -> Void
@@ -24,18 +21,6 @@ struct IconTileView: View {
             result[range].backgroundColor = .white.opacity(0.25)
         }
         return result
-    }
-
-    private var targetOpacity: Double {
-        exiting ? 0 : (entered ? 1 : 0)
-    }
-
-    private var targetOffsetY: CGFloat {
-        exiting ? 30 : (entered ? 0 : 40)
-    }
-
-    private var targetScale: CGFloat {
-        exiting ? 0.9 : (entered ? 1 : 0.85)
     }
 
     var body: some View {
@@ -68,17 +53,6 @@ struct IconTileView: View {
                 .frame(width: 140, height: 150)
                 .contentShape(Rectangle())
                 .compositingGroup()
-                .opacity(targetOpacity)
-                .offset(y: targetOffsetY)
-                .scaleEffect(targetScale)
-                .animation(
-                    .spring(response: 0.4, dampingFraction: 0.8).delay(revealDelay),
-                    value: entered
-                )
-                .animation(
-                    .easeOut(duration: 0.22).delay(revealDelay * 0.5),
-                    value: exiting
-                )
             }
             .buttonStyle(.plain)
         }

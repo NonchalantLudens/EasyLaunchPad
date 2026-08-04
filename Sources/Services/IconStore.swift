@@ -18,5 +18,12 @@ actor IconStore {
         return image
     }
 
+    /// 后台预热所有应用图标，首次呼出即时显示。
+    func prewarm(urls: [URL]) async {
+        for url in urls where cache[url.path] == nil {
+            _ = await icon(for: url)
+        }
+    }
+
     private static let placeholderIcon = NSWorkspace.shared.icon(for: .application)
 }

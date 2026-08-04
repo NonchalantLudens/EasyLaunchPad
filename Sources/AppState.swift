@@ -13,6 +13,10 @@ final class AppState: ObservableObject {
     init() {
         catalog.refresh()
         WallpaperStore.shared.preloadMainScreen()
+        let urls = catalog.apps.compactMap(\.url)
+        Task.detached(priority: .background) {
+            await IconStore.shared.prewarm(urls: urls)
+        }
         controller.attachCatalog(catalog)
         controller.attachSettings(settings)
         shortcuts = ShortcutManager(keyCode: settings.hotkeyKeyCode, modifiers: settings.hotkeyModifiers) { [weak self] in

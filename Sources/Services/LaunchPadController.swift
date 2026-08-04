@@ -2,10 +2,6 @@ import AppKit
 import Carbon.HIToolbox
 import SwiftUI
 
-extension Notification.Name {
-    static let launchPadWillHide = Notification.Name("LaunchPadWillHide")
-}
-
 @MainActor
 final class LaunchPadController: ObservableObject {
     @Published private(set) var isVisible = false
@@ -69,25 +65,25 @@ final class LaunchPadController: ObservableObject {
         guard let window else { return }
         window.setFrame(target.frame, display: true)
         window.contentView = makeContentView()
+        window.alphaValue = 0
         isVisible = true
         window.makeKeyAndOrderFront(nil)
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.28
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            window.animator().alphaValue = 1
+        }
     }
 
     func hide() {
         guard isVisible else { return }
         isVisible = false
-        NotificationCenter.default.post(name: .launchPadWillHide, object: self)
-    }
-
-    /// Called by the view after its exit animation finishes.
-    func finishHide() {
         guard let window else { return }
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.15
+            context.duration = 0.22
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
-            window.alphaValue = 1
             self?.hideWindow()
         }
     }
