@@ -38,8 +38,8 @@ mkdir -p "$STAGING/.background"
 cp -R "$APP" "$STAGING/"
 ln -s /Applications "$STAGING/Applications"
 
-# 生成安装页背景图（640x400 @2x）
-swift scripts/make_dmg_background.swift "$STAGING/.background/install-bg.png" >/dev/null
+# 生成安装页背景图（480x250，小于内容区 480x272，文字不会被底部裁剪）
+swift scripts/make_dmg_background.swift "$STAGING/.background/install-bg.png" 480 250 >/dev/null
 
 # 原始可写镜像（用于 Finder 定制）
 rm -f "$RAW_DMG"
@@ -78,8 +78,9 @@ tell application "Finder"
     set opts to the icon view options of container window
     set icon size of opts to 88
     set background picture of opts to (POSIX file "$MOUNT_POINT/.background/install-bg.png" as alias)
-    set position of item "LaunchPad.app" of container window to {178, 150}
-    set position of item "Applications" of container window to {302, 150}
+    -- 图标按内容区（480x272）垂直居中：中心 y=136，成对水平居中
+    set position of item "LaunchPad.app" of container window to {178, 136}
+    set position of item "Applications" of container window to {302, 136}
     close
   end tell
 end tell

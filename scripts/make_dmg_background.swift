@@ -1,9 +1,12 @@
 import AppKit
 
-// Finder 窗口 480x300（点），背景图 1:1 像素。
-// 图标中心（Finder position 即中心）：LaunchPad.app (178,150)，Applications (302,150)。
-let W: Int = 480
-let H: Int = 300
+// 用法: make_dmg_background.swift <输出路径> [宽] [高]
+// 背景图高度小于 Finder 内容区（窗口 480x300，标题栏 ~28pt → 内容 ~480x272，
+// 背景取 480x250），任何锚定/缩放方式下文字都不会被裁剪。
+let W: Int = CommandLine.arguments.count > 2 ? Int(CommandLine.arguments[2]) ?? 480 : 480
+let H: Int = CommandLine.arguments.count > 3 ? Int(CommandLine.arguments[3]) ?? 250 : 250
+// 文字位置按图像高度计算：距底部 20%（安全边距），永不贴近底边
+let textY = Int(Double(H) * 0.20)
 
 guard let rep = NSBitmapImageRep(
     bitmapDataPlanes: nil,
@@ -30,7 +33,7 @@ NSGradient(colors: [
     NSColor(calibratedRed: 0.88, green: 0.89, blue: 0.92, alpha: 1),
 ])?.draw(in: bgRect, angle: -90)
 
-// 文字置于图标标签下方（图标居中 y=150，标签底约 y=100，文字 y=60）
+// 提示文字（居中，位置按图像高度计算）
 func drawText(_ string: String, center: NSPoint, fontSize: CGFloat, color: NSColor) {
     let attrs: [NSAttributedString.Key: Any] = [
         .font: NSFont.systemFont(ofSize: fontSize, weight: .medium),
@@ -41,7 +44,7 @@ func drawText(_ string: String, center: NSPoint, fontSize: CGFloat, color: NSCol
     attr.draw(at: NSPoint(x: center.x - s.width / 2, y: center.y - s.height / 2))
 }
 drawText("将 LaunchPad 拖入 Applications 文件夹以安装",
-         center: NSPoint(x: 240, y: 60), fontSize: 15,
+         center: NSPoint(x: CGFloat(W) / 2, y: CGFloat(textY)), fontSize: 15,
          color: NSColor(calibratedRed: 0.20, green: 0.24, blue: 0.34, alpha: 1))
 
 NSGraphicsContext.restoreGraphicsState()
@@ -50,4 +53,4 @@ guard let png = rep.representation(using: .png, properties: [:]) else {
     fatalError("failed to render background")
 }
 try? png.write(to: URL(fileURLWithPath: CommandLine.arguments[1]))
-print("background written to \(CommandLine.arguments[1])")
+print("background \(W)x\(H) textY=\(textY) written")
