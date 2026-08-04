@@ -44,6 +44,7 @@ struct LaunchPadView: View {
                 SearchBarView(text: $searchText, focused: $searchFocused)
                     .padding(.top, 56)
                 Spacer()
+                    .frame(height: 60)
                 GridPagesView(
                     pages: pages,
                     selection: selection,
@@ -59,14 +60,16 @@ struct LaunchPadView: View {
                 )
                 .frame(maxHeight: .infinity)
                 Spacer()
+                    .frame(height: 90)
+            }
+            .overlay(alignment: .bottom) {
                 if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
                     PageDotsView(
                         pageCount: pages.count,
                         currentPage: selection.pageIndex
                     )
-                    .transition(.opacity)
+                    .padding(.bottom, 18)
                 }
-                Spacer()
             }
             .opacity(appeared ? 1 : 0)
             .scaleEffect(appeared ? 1 * pinchScale : 0.98 * pinchScale)

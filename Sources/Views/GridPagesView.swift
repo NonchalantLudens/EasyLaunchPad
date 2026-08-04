@@ -31,7 +31,8 @@ struct GridPagesView: View {
                         onSelect: onSelect,
                         onBadge: onBadge
                     )
-                    .frame(width: geo.size.width)
+                    // 所有页面同宽同高、内容顶部对齐，保证页间布局一致
+                    .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
                 }
             }
             .offset(x: -CGFloat(selection.pageIndex) * geo.size.width)
@@ -55,30 +56,27 @@ struct GridPageView: View {
     let onBadge: (AppItem) -> Void
 
     var body: some View {
-        ZStack {
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.fixed(size.tileWidth), spacing: size.spacing), count: columns),
-                spacing: size.spacing
-            ) {
-                ForEach(Array(page.enumerated()), id: \.offset) { index, app in
-                    IconTileView(
-                        app: app,
-                        isSelected: selectedIndex == index,
-                        highlight: highlight,
-                        jiggle: deleteMode
-                            ? sin(jigglePhase + Double(index) * 0.7) * 1.2
-                            : 0,
-                        deleteMode: deleteMode,
-                        size: size,
-                        entered: entered,
-                        revealDelay: Double(index / columns) * 0.04,
-                        animationEnabled: animationEnabled,
-                        action: { onSelect(app) },
-                        onBadge: { onBadge(app) }
-                    )
-                }
+        LazyVGrid(
+            columns: Array(repeating: GridItem(.fixed(size.tileWidth), spacing: size.spacing), count: columns),
+            spacing: size.spacing
+        ) {
+            ForEach(Array(page.enumerated()), id: \.offset) { index, app in
+                IconTileView(
+                    app: app,
+                    isSelected: selectedIndex == index,
+                    highlight: highlight,
+                    jiggle: deleteMode
+                        ? sin(jigglePhase + Double(index) * 0.7) * 1.2
+                        : 0,
+                    deleteMode: deleteMode,
+                    size: size,
+                    entered: entered,
+                    revealDelay: Double(index / columns) * 0.04,
+                    animationEnabled: animationEnabled,
+                    action: { onSelect(app) },
+                    onBadge: { onBadge(app) }
+                )
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
