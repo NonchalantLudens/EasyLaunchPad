@@ -41,6 +41,10 @@ struct GeneralSettingsView: View {
                     .frame(width: 220)
                 }
                 Toggle("图标入场动画", isOn: $settings.iconEntryAnimation)
+                Toggle("显示系统应用", isOn: $settings.showSystemApps)
+                Text("关闭后不扫描 /System/Applications；系统应用（如计算器）可按住 Option 按需隐藏。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             Section("启动") {
                 Toggle("登录时自动启动", isOn: $settings.autoStart)

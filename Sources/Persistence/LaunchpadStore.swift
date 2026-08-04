@@ -20,6 +20,7 @@ enum LaunchpadStore {
         static let autoStart = "autoStart"
         static let iconSize = "iconSize"
         static let iconEntryAnimation = "iconEntryAnimation"
+        static let showSystemApps = "showSystemApps"
     }
 
     static func loadHiddenApps() -> [HiddenAppRecord] {
@@ -100,5 +101,14 @@ enum LaunchpadStore {
 
     static func saveIconEntryAnimation(_ enabled: Bool) {
         defaults.set(enabled, forKey: Key.iconEntryAnimation)
+    }
+
+    static func loadShowSystemApps() -> Bool {
+        if defaults.object(forKey: Key.showSystemApps) == nil { return true }
+        return defaults.bool(forKey: Key.showSystemApps)
+    }
+
+    static func saveShowSystemApps(_ enabled: Bool) {
+        defaults.set(enabled, forKey: Key.showSystemApps)
     }
 }

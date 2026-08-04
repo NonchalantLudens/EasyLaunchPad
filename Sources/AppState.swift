@@ -19,6 +19,14 @@ final class AppState: ObservableObject {
         WallpaperStore.shared.preloadMainScreen()
         controller.attachCatalog(catalog)
         controller.attachSettings(settings)
+        catalog.includeSystemApps = settings.showSystemApps
+        settings.$showSystemApps
+            .sink { [weak self] enabled in
+                guard let self else { return }
+                self.catalog.includeSystemApps = enabled
+                self.catalog.refresh()
+            }
+            .store(in: &cancellables)
         shortcuts = ShortcutManager(keyCode: settings.hotkeyKeyCode, modifiers: settings.hotkeyModifiers) { [weak self] in
             self?.controller.toggle()
         }

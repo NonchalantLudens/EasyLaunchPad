@@ -11,6 +11,9 @@ final class AppCatalog: ObservableObject {
     private let selfBundleID = Bundle.main.bundleIdentifier ?? ""
     private var refreshScheduled = false
 
+    /// 是否扫描 /System/Applications（系统应用，如计算器）。
+    var includeSystemApps = true
+
     init() {
         hiddenRecords = LaunchpadStore.loadHiddenApps()
         manualURLs = LaunchpadStore.loadManualURLs()
@@ -33,8 +36,15 @@ final class AppCatalog: ObservableObject {
         let trashed = trashedIDs
         let manual = manualURLs
         let selfID = selfBundleID
+        let includeSystem = includeSystemApps
         let newApps = await Task.detached(priority: .userInitiated) {
-            Self.buildApps(hiddenIDs: hiddenIDs, trashed: trashed, manual: manual, selfID: selfID)
+            Self.buildApps(
+                hiddenIDs: hiddenIDs,
+                trashed: trashed,
+                manual: manual,
+                selfID: selfID,
+                includeSystemApps: includeSystem
+            )
         }.value
         // 内容未变化时不发布，避免无谓动画
         if apps != newApps {
@@ -46,10 +56,12 @@ final class AppCatalog: ObservableObject {
         hiddenIDs: Set<String>,
         trashed: Set<String>,
         manual: [URL],
-        selfID: String
+        selfID: String,
+        includeSystemApps: Bool
     ) -> [AppItem] {
         var byID: [String: AppItem] = [:]
-        for item in scanApplicationsFolders() where !hiddenIDs.contains(item.id) && !trashed.contains(item.id) {
+        for item in scanApplicationsFolders(includeSystemApps: includeSystemApps)
+        where !hiddenIDs.contains(item.id) && !trashed.contains(item.id) {
             byID[item.id] = item
         }
         for url in manual {
@@ -99,8 +111,11 @@ final class AppCatalog: ObservableObject {
 
     // MARK: - Scanning (后台执行，非隔离)
 
-    private nonisolated static func scanApplicationsFolders() -> [AppItem] {
-        var dirs: [String] = ["/Applications", "/System/Applications"]
+    private nonisolated static func scanApplicationsFolders(includeSystemApps: Bool) -> [AppItem] {
+        var dirs: [String] = ["/Applications"]
+        if includeSystemApps {
+            dirs.append("/System/Applications")
+        }
         let home = NSHomeDirectory()
         dirs.append(home + "/Applications")
         var items: [AppItem] = []

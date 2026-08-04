@@ -25,6 +25,9 @@ final class LaunchpadSettings: ObservableObject {
     @Published var iconEntryAnimation: Bool {
         didSet { LaunchpadStore.saveIconEntryAnimation(iconEntryAnimation) }
     }
+    @Published var showSystemApps: Bool {
+        didSet { LaunchpadStore.saveShowSystemApps(showSystemApps) }
+    }
 
     /// Set by AppState when RegisterEventHotKey fails (conflict with another app).
     @Published var hotkeyConflict = false
@@ -39,6 +42,7 @@ final class LaunchpadSettings: ObservableObject {
         autoStart = LaunchpadStore.loadAutoStart()
         iconSize = LaunchpadStore.loadIconSize()
         iconEntryAnimation = LaunchpadStore.loadIconEntryAnimation()
+        showSystemApps = LaunchpadStore.loadShowSystemApps()
     }
 
     func autoStartStatusText() -> String {
