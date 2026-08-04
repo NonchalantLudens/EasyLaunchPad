@@ -100,7 +100,7 @@ final class AppCatalog: ObservableObject {
     // MARK: - Scanning (后台执行，非隔离)
 
     private nonisolated static func scanApplicationsFolders() -> [AppItem] {
-        var dirs: [String] = ["/Applications"]
+        var dirs: [String] = ["/Applications", "/System/Applications"]
         let home = NSHomeDirectory()
         dirs.append(home + "/Applications")
         var items: [AppItem] = []
