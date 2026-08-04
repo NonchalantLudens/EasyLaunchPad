@@ -17,6 +17,7 @@ struct LaunchPadView: View {
     @State private var pinchScale: CGFloat = 1
     @State private var pinchAccum: CGFloat = 0
     @State private var swipeDelta: CGFloat = 0
+    @State private var lastWheelSwitch = Date.distantPast
     @FocusState private var searchFocused: Bool
 
     private var filteredApps: [AppItem] {
@@ -92,7 +93,7 @@ struct LaunchPadView: View {
                     wallpaper = image
                 }
             }
-            withAnimation(.easeOut(duration: 0.3)) {
+            withAnimation(.easeOut(duration: 0.2)) {
                 appeared = true
             }
         }
@@ -189,6 +190,14 @@ struct LaunchPadView: View {
         selection.itemIndex = min(selection.itemIndex, max(0, pages[newPage].count - 1))
     }
 
+    /// 滚轮切页带防抖：快速连续滚动只算一档，形成档位感。
+    private func wheelSwitch(_ direction: GridDirection) {
+        let now = Date()
+        guard now.timeIntervalSince(lastWheelSwitch) > 0.2 else { return }
+        lastWheelSwitch = now
+        switchPage(direction)
+    }
+
     private func handleKey(_ event: NSEvent) -> Bool {
         if searchFocused {
             if event.keyCode == UInt16(kVK_Escape) {
@@ -266,7 +275,7 @@ struct LaunchPadView: View {
             }
             if event.phase.contains(.ended) {
                 if abs(swipeDelta) > 50 {
-                    switchPage(swipeDelta < 0 ? .right : .left)
+                    wheelSwitch(swipeDelta < 0 ? .right : .left)
                 }
                 swipeDelta = 0
                 return true
@@ -277,7 +286,7 @@ struct LaunchPadView: View {
                 let dy = abs(event.scrollingDeltaY)
                 if max(dx, dy) > 5 {
                     let delta = dx >= dy ? event.scrollingDeltaX : event.scrollingDeltaY
-                    switchPage(delta < 0 ? .right : .left)
+                    wheelSwitch(delta < 0 ? .right : .left)
                 }
                 return true
             }

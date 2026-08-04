@@ -78,7 +78,7 @@ final class LaunchPadController: ObservableObject {
         isVisible = true
         window.makeKeyAndOrderFront(nil)
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.28
+            context.duration = 0.18
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             window.animator().alphaValue = 1
         }
@@ -89,7 +89,7 @@ final class LaunchPadController: ObservableObject {
         isVisible = false
         guard let window else { return }
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.22
+            context.duration = 0.15
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in

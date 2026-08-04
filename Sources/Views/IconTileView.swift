@@ -70,7 +70,7 @@ struct IconTileView: View {
         .scaleEffect(entered ? 1 : 0.85)
         .animation(
             animationEnabled
-                ? .spring(response: 0.4, dampingFraction: 0.8).delay(revealDelay)
+                ? .spring(response: 0.28, dampingFraction: 0.8).delay(revealDelay)
                 : nil,
             value: entered
         )

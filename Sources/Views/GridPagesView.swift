@@ -71,7 +71,7 @@ struct GridPageView: View {
                     deleteMode: deleteMode,
                     size: size,
                     entered: entered,
-                    revealDelay: Double(index / columns) * 0.04,
+                    revealDelay: Double(index / columns) * 0.025,
                     animationEnabled: animationEnabled,
                     action: { onSelect(app) },
                     onBadge: { onBadge(app) }
