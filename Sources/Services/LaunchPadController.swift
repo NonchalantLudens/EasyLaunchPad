@@ -16,6 +16,11 @@ final class LaunchPadController: ObservableObject {
     private var observers: [NSObjectProtocol] = []
     private var catalog: AppCatalog?
 
+    /// Set by the content view to handle navigation keys. Return true to consume the event.
+    var keyHandler: ((NSEvent) -> Bool)?
+
+    private(set) var gridLayout = GridLayout(columns: 10, rows: 6)
+
     func attachCatalog(_ catalog: AppCatalog) {
         self.catalog = catalog
     }
@@ -30,6 +35,7 @@ final class LaunchPadController: ObservableObject {
 
         isVisible = true
         NSApp.activate(ignoringOtherApps: true)
+        gridLayout = GridLayout.layout(for: CGSize(width: screen.frame.width, height: screen.frame.height - 120))
 
         let window = NSWindow(
             contentRect: screen.frame,
@@ -100,6 +106,9 @@ final class LaunchPadController: ObservableObject {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, self.window?.isKeyWindow == true else { return event }
+            if let keyHandler, keyHandler(event) {
+                return nil
+            }
             if event.keyCode == UInt16(kVK_Escape), !event.modifierFlags.contains(.command) {
                 self.hide()
                 return nil

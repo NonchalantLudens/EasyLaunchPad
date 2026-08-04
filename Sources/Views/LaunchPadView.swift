@@ -1,30 +1,49 @@
+import AppKit
+import Carbon.HIToolbox
 import SwiftUI
 
 struct LaunchPadView: View {
     @EnvironmentObject private var controller: LaunchPadController
     @EnvironmentObject private var catalog: AppCatalog
     @State private var appeared = false
-
-    private let columns = Array(repeating: GridItem(.fixed(100), spacing: 16), count: 10)
+    @State private var selection = GridSelection.zero
+    @State private var pages: [[AppItem]] = []
 
     var body: some View {
         ZStack {
             VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
                 .ignoresSafeArea()
 
-            VStack(spacing: 8) {
+            VStack(spacing: 0) {
                 Spacer()
-                LazyVGrid(columns: columns, spacing: 20) {
-                    ForEach(catalog.apps) { app in
-                        AppIconCell(app: app)
-                    }
-                }
-                .padding(.horizontal, 40)
+                GridPagesView(
+                    pages: pages,
+                    selection: selection,
+                    columns: controller.gridLayout.columns,
+                    onSelect: open
+                )
+                .frame(maxHeight: .infinity)
                 Spacer()
+                PageDotsView(
+                    pageCount: pages.count,
+                    currentPage: selection.pageIndex
+                )
                 Spacer()
             }
             .opacity(appeared ? 1 : 0)
             .scaleEffect(appeared ? 1 : 1.12)
+        }
+        .onAppear {
+            rebuildPages()
+            controller.keyHandler = { event in
+                handleKey(event)
+            }
+        }
+        .onDisappear {
+            controller.keyHandler = nil
+        }
+        .onReceive(catalog.$apps) { _ in
+            rebuildPages()
         }
         .onReceive(controller.$enteredFullScreen) { entered in
             guard entered, !appeared else { return }
@@ -37,24 +56,60 @@ struct LaunchPadView: View {
             }
         }
     }
-}
 
-struct AppIconCell: View {
-    let app: AppItem
+    private func rebuildPages() {
+        pages = controller.gridLayout.pages(catalog.apps)
+        selection = GridNavigation.clamp(selection, pageCounts: pages.map(\.count))
+    }
 
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(nsImage: app.icon)
-                .resizable()
-                .frame(width: 72, height: 72)
-                .shadow(color: .black.opacity(0.25), radius: 2, y: 2)
-            Text(app.name)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.white)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-                .shadow(color: .black.opacity(0.4), radius: 1, y: 1)
-                .frame(width: 100)
+    private func open(_ app: AppItem) {
+        if let url = app.url {
+            NSWorkspace.shared.open(url)
         }
+        controller.hide()
+    }
+
+    private func openSelected() {
+        guard !pages.isEmpty else { return }
+        let page = pages[selection.pageIndex]
+        guard page.indices.contains(selection.itemIndex) else { return }
+        open(page[selection.itemIndex])
+    }
+
+    private func move(_ direction: GridDirection) {
+        selection = GridNavigation.move(
+            direction,
+            from: selection,
+            pageCounts: pages.map(\.count),
+            columns: controller.gridLayout.columns
+        )
+    }
+
+    private func handleKey(_ event: NSEvent) -> Bool {
+        switch event.keyCode {
+        case UInt16(kVK_LeftArrow):
+            move(.left)
+        case UInt16(kVK_RightArrow):
+            move(.right)
+        case UInt16(kVK_UpArrow):
+            move(.up)
+        case UInt16(kVK_DownArrow):
+            move(.down)
+        case UInt16(kVK_Home):
+            selection = GridNavigation.page(0, pageCounts: pages.map(\.count))
+        case UInt16(kVK_End):
+            selection = GridNavigation.page(Int.max, pageCounts: pages.map(\.count))
+        case UInt16(kVK_Return):
+            openSelected()
+        default:
+            if event.modifierFlags.contains(.command),
+               let digit = (event.charactersIgnoringModifiers ?? "").first.flatMap({ $0.wholeNumberValue }),
+               digit > 0 {
+                selection = GridNavigation.page(digit - 1, pageCounts: pages.map(\.count))
+            } else {
+                return false
+            }
+        }
+        return true
     }
 }

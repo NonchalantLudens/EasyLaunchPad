@@ -28,8 +28,22 @@ targets:
         CFBundleDisplayName: LaunchPad
         LSMinimumSystemVersion: "15.0"
         NSHighResolutionCapable: true
+  LaunchPadTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: LaunchPad
 schemes:
   LaunchPad:
     build:
       targets:
         LaunchPad: all
+    test:
+      config: Debug
+      targets:
+        - LaunchPadTests
