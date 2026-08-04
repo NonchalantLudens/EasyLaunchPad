@@ -81,7 +81,15 @@ final class LaunchPadController: ObservableObject {
 
     /// Called by the view after its exit animation finishes.
     func finishHide() {
-        hideWindow()
+        guard let window else { return }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.15
+            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            window.alphaValue = 1
+            self?.hideWindow()
+        }
     }
 
     /// The screen under the mouse cursor; falls back to the main screen.

@@ -127,12 +127,12 @@ struct LaunchPadView: View {
             rebuildPages()
         }
         .onReceive(NotificationCenter.default.publisher(for: .launchPadWillHide)) { _ in
-            withAnimation(.easeOut(duration: 0.25)) {
+            withAnimation(.easeOut(duration: 0.22)) {
                 exiting = true
-                bgAppeared = false
                 appeared = false
+                // 背景保持可见，避免露出窗口底色导致黑屏
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) {
                 controller.finishHide()
             }
         }
