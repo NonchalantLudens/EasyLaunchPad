@@ -31,7 +31,7 @@ NSGradient(colors: [
     NSColor(calibratedRed: 0.88, green: 0.89, blue: 0.92, alpha: 1),
 ])?.draw(in: bgRect, angle: -90)
 
-// 下方简单文字提醒
+// 文字置于窗口中部偏下（图标回到顶部默认布局后，y=60 过于靠下）
 func drawText(_ string: String, center: NSPoint, fontSize: CGFloat, color: NSColor) {
     let attrs: [NSAttributedString.Key: Any] = [
         .font: NSFont.systemFont(ofSize: fontSize, weight: .medium),
@@ -42,7 +42,7 @@ func drawText(_ string: String, center: NSPoint, fontSize: CGFloat, color: NSCol
     attr.draw(at: NSPoint(x: center.x - s.width / 2, y: center.y - s.height / 2))
 }
 drawText("将 LaunchPad 拖入 Applications 文件夹以安装",
-         center: NSPoint(x: 320, y: 60), fontSize: 15,
+         center: NSPoint(x: 320, y: 180), fontSize: 15,
          color: NSColor(calibratedRed: 0.20, green: 0.24, blue: 0.34, alpha: 1))
 
 NSGraphicsContext.restoreGraphicsState()
