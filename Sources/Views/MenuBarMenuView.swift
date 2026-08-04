@@ -3,36 +3,36 @@ import UniformTypeIdentifiers
 
 struct MenuBarMenuView: View {
     @EnvironmentObject private var state: AppState
-    @State private var showHiddenApps = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Button(state.controller.isVisible ? "关闭 LaunchPad" : "打开 LaunchPad") {
-                state.controller.toggle()
-            }
-            Divider()
-            Button("添加应用…") {
-                addApp()
-            }
-            Button("隐藏的应用…") {
-                showHiddenApps = true
-            }
-            Divider()
-            Button("偏好设置…") {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-            }
-            Button("关于 LaunchPad…") {
-                NSApp.orderFrontStandardAboutPanel(nil)
-            }
-            Divider()
-            Button("退出 LaunchPad") {
-                NSApp.terminate(nil)
+        Button(state.controller.isVisible ? "关闭 LaunchPad" : "打开 LaunchPad") {
+            state.controller.toggle()
+        }
+        Divider()
+        Button("添加应用…") {
+            addApp()
+        }
+        Menu("隐藏的应用") {
+            if state.catalog.hiddenRecords.isEmpty {
+                Text("无隐藏应用")
+            } else {
+                ForEach(state.catalog.hiddenRecords, id: \.id) { record in
+                    Button("恢复「\(record.name)」") {
+                        state.catalog.unhide(record.id)
+                    }
+                }
             }
         }
-        .padding(4)
-        .sheet(isPresented: $showHiddenApps) {
-            HiddenAppsView()
-                .environmentObject(state.catalog)
+        Divider()
+        SettingsLink {
+            Text("偏好设置…")
+        }
+        Button("关于 LaunchPad…") {
+            NSApp.orderFrontStandardAboutPanel(nil)
+        }
+        Divider()
+        Button("退出 LaunchPad") {
+            NSApp.terminate(nil)
         }
     }
 

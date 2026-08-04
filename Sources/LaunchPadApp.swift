@@ -10,7 +10,7 @@ struct LaunchPadApp: App {
             MenuBarMenuView()
                 .environmentObject(state)
         }
-        .menuBarExtraStyle(.window)
+        .menuBarExtraStyle(.menu)
 
         Settings {
             SettingsView()

@@ -56,7 +56,7 @@ struct GridPageView: View {
                     isSelected: selectedIndex == index,
                     highlight: highlight,
                     jiggle: deleteMode
-                        ? sin(jigglePhase * 2 * .pi + Double(index) * 0.7) * 2.2
+                        ? sin(jigglePhase * .pi + Double(index) * 0.7) * 2.2
                         : 0,
                     deleteMode: deleteMode,
                     action: { onSelect(app) },

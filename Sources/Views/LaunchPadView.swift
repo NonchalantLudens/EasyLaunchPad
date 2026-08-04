@@ -107,13 +107,12 @@ struct LaunchPadView: View {
         .onChange(of: searchText) { _, _ in
             rebuildPages()
         }
-        .confirmationDialog(
+        .alert(
             pendingActionApp.map { "处理「\($0.name)」" } ?? "",
             isPresented: Binding(
                 get: { pendingActionApp != nil },
                 set: { if !$0 { pendingActionApp = nil } }
-            ),
-            titleVisibility: .visible
+            )
         ) {
             Button("从 LaunchPad 隐藏") {
                 if let app = pendingActionApp {
@@ -126,6 +125,8 @@ struct LaunchPadView: View {
                 }
             }
             Button("取消", role: .cancel) {}
+        } message: {
+            Text("选择要执行的操作")
         }
     }
 

@@ -37,11 +37,11 @@ struct IconTileView: View {
                         if deleteMode {
                             Button(action: onBadge) {
                                 Image(systemName: "x.circle.fill")
-                                    .font(.system(size: 26))
+                                    .font(.system(size: 16))
                                     .foregroundStyle(.white, .red)
                             }
                             .buttonStyle(.plain)
-                            .offset(x: 48, y: -48)
+                            .offset(x: 40, y: -40)
                         }
                     }
                     Text(attributedName)
