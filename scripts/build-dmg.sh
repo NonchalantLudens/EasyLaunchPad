@@ -76,11 +76,8 @@ tell application "Finder"
     set the bounds of container window to {400, 150, 1040, 550}
     delay 1
     set opts to the icon view options of container window
-    set arrangement of opts to not arranged
     set icon size of opts to 88
     set background picture of opts to (POSIX file "$MOUNT_POINT/.background/install-bg.png" as alias)
-    set position of item "LaunchPad.app" of container window to {140, 220}
-    set position of item "Applications" of container window to {420, 220}
     close
   end tell
 end tell
