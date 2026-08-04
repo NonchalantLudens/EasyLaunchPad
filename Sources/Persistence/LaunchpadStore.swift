@@ -18,6 +18,8 @@ enum LaunchpadStore {
         static let swipeEnabled = "gestureSwipeEnabled"
         static let pinchEnabled = "gesturePinchEnabled"
         static let autoStart = "autoStart"
+        static let iconSize = "iconSize"
+        static let iconEntryAnimation = "iconEntryAnimation"
     }
 
     static func loadHiddenApps() -> [HiddenAppRecord] {
@@ -81,5 +83,22 @@ enum LaunchpadStore {
 
     static func saveAutoStart(_ enabled: Bool) {
         defaults.set(enabled, forKey: Key.autoStart)
+    }
+
+    static func loadIconSize() -> IconSizeLevel {
+        IconSizeLevel(rawValue: defaults.integer(forKey: Key.iconSize)) ?? .medium
+    }
+
+    static func saveIconSize(_ level: IconSizeLevel) {
+        defaults.set(level.rawValue, forKey: Key.iconSize)
+    }
+
+    static func loadIconEntryAnimation() -> Bool {
+        if defaults.object(forKey: Key.iconEntryAnimation) == nil { return true }
+        return defaults.bool(forKey: Key.iconEntryAnimation)
+    }
+
+    static func saveIconEntryAnimation(_ enabled: Bool) {
+        defaults.set(enabled, forKey: Key.iconEntryAnimation)
     }
 }

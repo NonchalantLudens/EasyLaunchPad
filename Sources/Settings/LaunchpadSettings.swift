@@ -19,6 +19,12 @@ final class LaunchpadSettings: ObservableObject {
     @Published var autoStart: Bool {
         didSet { applyAutoStart(autoStart) }
     }
+    @Published var iconSize: IconSizeLevel {
+        didSet { LaunchpadStore.saveIconSize(iconSize) }
+    }
+    @Published var iconEntryAnimation: Bool {
+        didSet { LaunchpadStore.saveIconEntryAnimation(iconEntryAnimation) }
+    }
 
     /// Set by AppState when RegisterEventHotKey fails (conflict with another app).
     @Published var hotkeyConflict = false
@@ -31,6 +37,8 @@ final class LaunchpadSettings: ObservableObject {
         swipeEnabled = LaunchpadStore.loadSwipeEnabled()
         pinchEnabled = LaunchpadStore.loadPinchEnabled()
         autoStart = LaunchpadStore.loadAutoStart()
+        iconSize = LaunchpadStore.loadIconSize()
+        iconEntryAnimation = LaunchpadStore.loadIconEntryAnimation()
     }
 
     func autoStartStatusText() -> String {

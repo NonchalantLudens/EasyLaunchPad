@@ -41,7 +41,12 @@ final class LaunchPadController: ObservableObject {
         guard !isVisible else { return }
         let target = Self.targetScreen()
         currentScreen = target
-        gridLayout = GridLayout.layout(for: CGSize(width: target.frame.width, height: target.frame.height - 120))
+        let size = settings?.iconSize ?? .medium
+        gridLayout = GridLayout.layout(
+            for: CGSize(width: target.frame.width, height: target.frame.height - 120),
+            itemWidth: size.gridItemWidth,
+            itemHeight: size.gridItemHeight
+        )
 
         NSApp.activate(ignoringOtherApps: true)
 

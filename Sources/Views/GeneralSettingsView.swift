@@ -27,6 +27,21 @@ struct GeneralSettingsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            Section("显示") {
+                HStack {
+                    Text("图标大小")
+                    Spacer()
+                    Picker("图标大小", selection: $settings.iconSize) {
+                        ForEach(IconSizeLevel.allCases) { level in
+                            Text(level.title).tag(level)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .frame(width: 220)
+                }
+                Toggle("图标入场动画", isOn: $settings.iconEntryAnimation)
+            }
             Section("启动") {
                 Toggle("登录时自动启动", isOn: $settings.autoStart)
                 Text(statusText)

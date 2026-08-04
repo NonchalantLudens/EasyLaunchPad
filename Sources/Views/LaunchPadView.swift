@@ -51,6 +51,9 @@ struct LaunchPadView: View {
                     highlight: searchText.trimmingCharacters(in: .whitespaces),
                     deleteMode: controller.deleteMode,
                     jigglePhase: jigglePhase,
+                    size: settings.iconSize,
+                    entered: appeared || !settings.iconEntryAnimation,
+                    animationEnabled: settings.iconEntryAnimation,
                     onSelect: open,
                     onBadge: { pendingActionApp = $0 }
                 )
@@ -113,25 +116,22 @@ struct LaunchPadView: View {
             rebuildPages()
         }
         .alert(
-            pendingActionApp.map { "处理「\($0.name)」" } ?? "",
+            "处理应用",
             isPresented: Binding(
                 get: { pendingActionApp != nil },
                 set: { if !$0 { pendingActionApp = nil } }
-            )
-        ) {
+            ),
+            presenting: pendingActionApp
+        ) { app in
             Button("从 LaunchPad 隐藏") {
-                if let app = pendingActionApp {
-                    catalog.hide(app)
-                }
+                catalog.hide(app)
             }
             Button("移到废纸篓", role: .destructive) {
-                if let app = pendingActionApp {
-                    trash(app)
-                }
+                trash(app)
             }
             Button("取消", role: .cancel) {}
-        } message: {
-            Text("选择要执行的操作")
+        } message: { app in
+            Text("选择要执行的操作：\(app.name)")
         }
     }
 

@@ -7,6 +7,9 @@ struct GridPagesView: View {
     let highlight: String
     let deleteMode: Bool
     let jigglePhase: Double
+    let size: IconSizeLevel
+    let entered: Bool
+    let animationEnabled: Bool
     let onSelect: (AppItem) -> Void
     let onBadge: (AppItem) -> Void
 
@@ -21,6 +24,9 @@ struct GridPagesView: View {
                         pageIndex: index,
                         deleteMode: deleteMode,
                         jigglePhase: jigglePhase,
+                        size: size,
+                        entered: entered,
+                        animationEnabled: animationEnabled,
                         selectedIndex: selection.pageIndex == index ? selection.itemIndex : nil,
                         onSelect: onSelect,
                         onBadge: onBadge
@@ -41,14 +47,17 @@ struct GridPageView: View {
     let pageIndex: Int
     let deleteMode: Bool
     let jigglePhase: Double
+    let size: IconSizeLevel
+    let entered: Bool
+    let animationEnabled: Bool
     let selectedIndex: Int?
     let onSelect: (AppItem) -> Void
     let onBadge: (AppItem) -> Void
 
     var body: some View {
         LazyVGrid(
-            columns: Array(repeating: GridItem(.fixed(140), spacing: 32), count: columns),
-            spacing: 36
+            columns: Array(repeating: GridItem(.fixed(size.tileWidth), spacing: size.spacing), count: columns),
+            spacing: size.spacing
         ) {
             ForEach(Array(page.enumerated()), id: \.offset) { index, app in
                 IconTileView(
@@ -59,6 +68,10 @@ struct GridPageView: View {
                         ? sin(jigglePhase + Double(index) * 0.7) * 1.2
                         : 0,
                     deleteMode: deleteMode,
+                    size: size,
+                    entered: entered,
+                    revealDelay: Double(index / columns) * 0.04,
+                    animationEnabled: animationEnabled,
                     action: { onSelect(app) },
                     onBadge: { onBadge(app) }
                 )
