@@ -31,28 +31,7 @@ NSGradient(colors: [
     NSColor(calibratedRed: 0.88, green: 0.89, blue: 0.92, alpha: 1),
 ])?.draw(in: bgRect, angle: -90)
 
-// 两图标之间的引导箭头（深色，指向右侧 Applications）
-let arrowColor = NSColor(calibratedRed: 0.20, green: 0.24, blue: 0.34, alpha: 0.9)
-let arrow = NSBezierPath()
-arrow.move(to: NSPoint(x: 184, y: 220))
-arrow.line(to: NSPoint(x: 386, y: 220))
-arrowColor.setStroke()
-arrow.lineWidth = 5
-arrow.lineCapStyle = .round
-arrow.stroke()
-
-let head = NSBezierPath()
-head.move(to: NSPoint(x: 390, y: 220))
-head.line(to: NSPoint(x: 370, y: 208))
-head.move(to: NSPoint(x: 390, y: 220))
-head.line(to: NSPoint(x: 370, y: 232))
-arrowColor.setStroke()
-head.lineWidth = 5
-head.lineCapStyle = .round
-head.lineJoinStyle = .round
-head.stroke()
-
-// 下方简单文字提醒（图标标签之下留足空间，y=60）
+// 下方简单文字提醒
 func drawText(_ string: String, center: NSPoint, fontSize: CGFloat, color: NSColor) {
     let attrs: [NSAttributedString.Key: Any] = [
         .font: NSFont.systemFont(ofSize: fontSize, weight: .medium),
