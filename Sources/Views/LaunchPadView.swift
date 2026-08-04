@@ -8,6 +8,8 @@ struct LaunchPadView: View {
     @EnvironmentObject private var settings: LaunchpadSettings
     @State private var appeared = false
     @State private var bgAppeared = false
+    @State private var exiting = false
+    @State private var jigglePhase: Double = 0
     @State private var selection = GridSelection.zero
     @State private var pages: [[AppItem]] = []
     @State private var searchText = ""
@@ -23,13 +25,26 @@ struct LaunchPadView: View {
         return catalog.apps.filter { $0.name.localizedCaseInsensitiveContains(query) }
     }
 
+    private var surfaceScale: CGFloat {
+        if exiting { return 0.95 * pinchScale }
+        return appeared ? 1 * pinchScale : 0.92 * pinchScale
+    }
+
+    private var surfaceOpacity: Double {
+        exiting ? 0 : (appeared ? 1 : 0)
+    }
+
     var body: some View {
         ZStack {
             VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
                 .ignoresSafeArea()
-            Color.black
-                .opacity(bgAppeared ? 0.62 : 0)
-                .ignoresSafeArea()
+            LinearGradient(
+                colors: [.black.opacity(0.45), .black.opacity(0.35)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+            .opacity(bgAppeared ? 1 : 0)
 
             VStack(spacing: 0) {
                 SearchBarView(text: $searchText, focused: $searchFocused)
@@ -42,6 +57,9 @@ struct LaunchPadView: View {
                     columns: controller.gridLayout.columns,
                     highlight: searchText.trimmingCharacters(in: .whitespaces),
                     deleteMode: controller.deleteMode,
+                    entered: appeared && !exiting,
+                    exiting: exiting,
+                    jigglePhase: jigglePhase,
                     onSelect: open,
                     onBadge: { pendingActionApp = $0 }
                 )
@@ -56,8 +74,8 @@ struct LaunchPadView: View {
                 }
                 Spacer()
             }
-            .opacity(appeared ? 1 : 0)
-            .scaleEffect(appeared ? 1 * pinchScale : 1.12 * pinchScale)
+            .opacity(surfaceOpacity)
+            .scaleEffect(surfaceScale)
         }
         .onAppear {
             rebuildPages()
@@ -67,16 +85,31 @@ struct LaunchPadView: View {
             controller.gestureHandler = { event in
                 handleGesture(event)
             }
-            withAnimation(.easeOut(duration: 0.25)) {
-                bgAppeared = true
-            }
-            withAnimation(.easeOut(duration: 0.35)) {
-                appeared = true
-            }
         }
         .onDisappear {
             controller.keyHandler = nil
             controller.gestureHandler = nil
+        }
+        .onReceive(controller.$enteredFullScreen) { entered in
+            guard entered, !exiting else { return }
+            withAnimation(.easeOut(duration: 0.25)) {
+                bgAppeared = true
+            }
+            withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
+                appeared = true
+            }
+        }
+        .onChange(of: controller.deleteMode) { _, enabled in
+            if enabled {
+                jigglePhase = 0
+                withAnimation(.easeInOut(duration: 0.11).repeatForever(autoreverses: true)) {
+                    jigglePhase = 1
+                }
+            } else {
+                withAnimation(.spring(duration: 0.2)) {
+                    jigglePhase = 0
+                }
+            }
         }
         .onReceive(catalog.$apps) { _ in
             rebuildPages()
@@ -85,11 +118,12 @@ struct LaunchPadView: View {
             rebuildPages()
         }
         .onReceive(NotificationCenter.default.publisher(for: .launchPadWillHide)) { _ in
-            withAnimation(.easeOut(duration: 0.15)) {
-                appeared = false
+            withAnimation(.easeOut(duration: 0.25)) {
+                exiting = true
                 bgAppeared = false
+                appeared = false
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.16) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 controller.finishHide()
             }
         }
@@ -160,7 +194,6 @@ struct LaunchPadView: View {
                 searchFocused = false
                 return true
             }
-            // 放行给 TextField：删除、光标移动、中文输入法等
             return false
         }
 

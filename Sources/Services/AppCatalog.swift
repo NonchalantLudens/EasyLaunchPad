@@ -28,7 +28,7 @@ final class AppCatalog: ObservableObject {
             let id = bundle.bundleIdentifier ?? url.deletingPathExtension().lastPathComponent
             guard !hiddenIDs.contains(id), !trashedIDs.contains(id), byID[id] == nil else { continue }
             let name = displayName(for: bundle, fallback: url.deletingPathExtension().lastPathComponent)
-            byID[id] = AppItem(id: id, name: name, url: url, icon: workspace.icon(forFile: url.path))
+            byID[id] = AppItem(id: id, name: name, url: url)
         }
 
         apps = byID.values
@@ -87,8 +87,7 @@ final class AppCatalog: ObservableObject {
                 guard let bundle = Bundle(url: appURL) else { continue }
                 let id = bundle.bundleIdentifier ?? appURL.deletingPathExtension().lastPathComponent
                 let name = displayName(for: bundle, fallback: appURL.deletingPathExtension().lastPathComponent)
-                let icon = workspace.icon(forFile: appURL.path)
-                items.append(AppItem(id: id, name: name, url: appURL, icon: icon))
+                items.append(AppItem(id: id, name: name, url: appURL))
             }
         }
         return items

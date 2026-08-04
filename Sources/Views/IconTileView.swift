@@ -6,11 +6,14 @@ struct IconTileView: View {
     let isSelected: Bool
     let highlight: String
     let revealDelay: Double
+    let entered: Bool
+    let exiting: Bool
+    let jiggle: Double
     let deleteMode: Bool
     let action: () -> Void
     let onBadge: () -> Void
 
-    @State private var revealed = false
+    @State private var icon: NSImage?
 
     private var attributedName: AttributedString {
         var result = AttributedString(app.name)
@@ -23,6 +26,18 @@ struct IconTileView: View {
         return result
     }
 
+    private var targetOpacity: Double {
+        exiting ? 0 : (entered ? 1 : 0)
+    }
+
+    private var targetOffsetY: CGFloat {
+        exiting ? 30 : (entered ? 0 : 40)
+    }
+
+    private var targetScale: CGFloat {
+        exiting ? 0.9 : (entered ? 1 : 0.85)
+    }
+
     var body: some View {
         ZStack {
             Button(action: deleteMode ? {} : action) {
@@ -33,10 +48,7 @@ struct IconTileView: View {
                             .frame(width: 100, height: 100)
                             .scaleEffect(isSelected ? 1 : 0.9)
                             .animation(.spring(duration: 0.25), value: isSelected)
-                        Image(nsImage: app.icon)
-                            .resizable()
-                            .frame(width: 96, height: 96)
-                            .shadow(color: .black.opacity(0.25), radius: 3, y: 2)
+                        iconView
                         if deleteMode {
                             Button(action: onBadge) {
                                 Image(systemName: "x.circle.fill")
@@ -55,21 +67,39 @@ struct IconTileView: View {
                 }
                 .frame(width: 140, height: 150)
                 .contentShape(Rectangle())
-                .opacity(revealed ? 1 : 0)
-                .scaleEffect(revealed ? 1 : 0.92)
+                .compositingGroup()
+                .opacity(targetOpacity)
+                .offset(y: targetOffsetY)
+                .scaleEffect(targetScale)
                 .animation(
-                    .spring(response: 0.35, dampingFraction: 0.8).delay(revealDelay),
-                    value: revealed
+                    .spring(response: 0.4, dampingFraction: 0.8).delay(revealDelay),
+                    value: entered
+                )
+                .animation(
+                    .easeOut(duration: 0.22).delay(revealDelay * 0.5),
+                    value: exiting
                 )
             }
             .buttonStyle(.plain)
         }
-        .jiggle(deleteMode)
-        .onAppear {
-            revealed = true
+        .rotationEffect(.degrees(jiggle))
+        .offset(x: jiggle * 0.55)
+        .task(id: app.id) {
+            icon = await IconStore.shared.icon(for: app.url)
         }
-        .onChange(of: app) { _, _ in
-            revealed = true
+    }
+
+    @ViewBuilder
+    private var iconView: some View {
+        if let icon {
+            Image(nsImage: icon)
+                .resizable()
+                .frame(width: 96, height: 96)
+                .shadow(color: .black.opacity(0.25), radius: 3, y: 2)
+        } else {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(.white.opacity(0.12))
+                .frame(width: 96, height: 96)
         }
     }
 }

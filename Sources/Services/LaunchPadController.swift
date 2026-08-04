@@ -10,6 +10,7 @@ extension Notification.Name {
 final class LaunchPadController: ObservableObject {
     @Published private(set) var isVisible = false
     @Published private(set) var deleteMode = false
+    @Published private(set) var enteredFullScreen = false
 
     private var window: LaunchPadWindow?
     private var keyMonitor: Any?
@@ -121,6 +122,7 @@ final class LaunchPadController: ObservableObject {
             if window.frame != target.frame {
                 window.setFrame(target.frame, display: true)
             }
+            self.enteredFullScreen = true
         }
         let exit = NotificationCenter.default.addObserver(
             forName: NSWindow.didExitFullScreenNotification,
@@ -161,6 +163,7 @@ final class LaunchPadController: ObservableObject {
     private func hideWindow() {
         window?.orderOut(nil)
         deleteMode = false
+        enteredFullScreen = false
         window?.contentView = nil
     }
 }
