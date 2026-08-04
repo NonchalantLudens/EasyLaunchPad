@@ -9,6 +9,7 @@ struct LaunchPadView: View {
     @State private var selection = GridSelection.zero
     @State private var pages: [[AppItem]] = []
     @State private var searchText = ""
+    @State private var pendingActionApp: AppItem?
     @FocusState private var searchFocused: Bool
 
     private var filteredApps: [AppItem] {
@@ -32,7 +33,9 @@ struct LaunchPadView: View {
                     selection: selection,
                     columns: controller.gridLayout.columns,
                     highlight: searchText.trimmingCharacters(in: .whitespaces),
-                    onSelect: open
+                    deleteMode: controller.deleteMode,
+                    onSelect: open,
+                    onBadge: { pendingActionApp = $0 }
                 )
                 .frame(maxHeight: .infinity)
                 Spacer()
@@ -72,6 +75,34 @@ struct LaunchPadView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 controller.finishHide()
             }
+        }
+        .confirmationDialog(
+            pendingActionApp.map { "处理「\($0.name)」" } ?? "",
+            isPresented: Binding(
+                get: { pendingActionApp != nil },
+                set: { if !$0 { pendingActionApp = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("从 LaunchPad 隐藏") {
+                if let app = pendingActionApp {
+                    catalog.hide(app)
+                }
+            }
+            Button("移到废纸篓", role: .destructive) {
+                if let app = pendingActionApp {
+                    trash(app)
+                }
+            }
+            Button("取消", role: .cancel) {}
+        }
+    }
+
+    private func trash(_ app: AppItem) {
+        guard let url = app.url else { return }
+        if TrashService.trash(url) {
+            catalog.removeManual(url)
+            catalog.markTrashed(app)
         }
     }
 

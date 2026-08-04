@@ -5,7 +5,9 @@ struct GridPagesView: View {
     let selection: GridSelection
     let columns: Int
     let highlight: String
+    let deleteMode: Bool
     let onSelect: (AppItem) -> Void
+    let onBadge: (AppItem) -> Void
 
     var body: some View {
         GeometryReader { geo in
@@ -16,8 +18,10 @@ struct GridPagesView: View {
                         columns: columns,
                         highlight: highlight,
                         pageIndex: index,
+                        deleteMode: deleteMode,
                         selectedIndex: selection.pageIndex == index ? selection.itemIndex : nil,
-                        onSelect: onSelect
+                        onSelect: onSelect,
+                        onBadge: onBadge
                     )
                     .frame(width: geo.size.width)
                 }
@@ -33,8 +37,10 @@ struct GridPageView: View {
     let columns: Int
     let highlight: String
     let pageIndex: Int
+    let deleteMode: Bool
     let selectedIndex: Int?
     let onSelect: (AppItem) -> Void
+    let onBadge: (AppItem) -> Void
 
     var body: some View {
         LazyVGrid(
@@ -46,10 +52,11 @@ struct GridPageView: View {
                     app: app,
                     isSelected: selectedIndex == index,
                     highlight: highlight,
-                    revealDelay: Double(index / columns) * 0.05
-                ) {
-                    onSelect(app)
-                }
+                    revealDelay: Double(index / columns) * 0.05,
+                    deleteMode: deleteMode,
+                    action: { onSelect(app) },
+                    onBadge: { onBadge(app) }
+                )
             }
         }
     }

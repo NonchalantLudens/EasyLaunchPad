@@ -4,24 +4,77 @@ import Foundation
 @MainActor
 final class AppCatalog: ObservableObject {
     @Published private(set) var apps: [AppItem] = []
+    @Published private(set) var hiddenRecords: [HiddenAppRecord] = []
 
+    private var manualURLs: [URL] = []
+    private var trashedIDs: Set<String> = []
     private let workspace = NSWorkspace.shared
     private let selfBundleID = Bundle.main.bundleIdentifier ?? ""
 
+    init() {
+        hiddenRecords = LaunchpadStore.loadHiddenApps()
+        manualURLs = LaunchpadStore.loadManualURLs()
+    }
+
     func refresh() {
+        let hiddenIDs = Set(hiddenRecords.map(\.id))
         var byID: [String: AppItem] = [:]
-        for item in scanLaunchServices() {
+
+        for item in scanLaunchServices() where !hiddenIDs.contains(item.id) && !trashedIDs.contains(item.id) {
             byID[item.id] = item
         }
-        for item in scanFileSystem() {
+        for item in scanFileSystem() where !hiddenIDs.contains(item.id) && !trashedIDs.contains(item.id) {
             if byID[item.id] == nil {
                 byID[item.id] = item
             }
         }
+        for url in manualURLs {
+            guard let bundle = Bundle(url: url) else { continue }
+            let id = bundle.bundleIdentifier ?? url.deletingPathExtension().lastPathComponent
+            guard !hiddenIDs.contains(id), !trashedIDs.contains(id), byID[id] == nil else { continue }
+            let name = displayName(for: bundle, fallback: url.deletingPathExtension().lastPathComponent)
+            byID[id] = AppItem(id: id, name: name, url: url, icon: workspace.icon(forFile: url.path))
+        }
+
         apps = byID.values
             .filter { $0.id != selfBundleID }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
+
+    // MARK: - App management
+
+    func hide(_ app: AppItem) {
+        guard !hiddenRecords.contains(where: { $0.id == app.id }) else { return }
+        hiddenRecords.append(HiddenAppRecord(id: app.id, name: app.name, url: app.url))
+        LaunchpadStore.saveHiddenApps(hiddenRecords)
+        refresh()
+    }
+
+    func unhide(_ id: String) {
+        hiddenRecords.removeAll { $0.id == id }
+        LaunchpadStore.saveHiddenApps(hiddenRecords)
+        refresh()
+    }
+
+    func addManual(_ url: URL) {
+        guard !manualURLs.contains(url) else { return }
+        manualURLs.append(url)
+        LaunchpadStore.saveManualURLs(manualURLs)
+        refresh()
+    }
+
+    func removeManual(_ url: URL) {
+        manualURLs.removeAll { $0 == url }
+        LaunchpadStore.saveManualURLs(manualURLs)
+        refresh()
+    }
+
+    func markTrashed(_ app: AppItem) {
+        trashedIDs.insert(app.id)
+        refresh()
+    }
+
+    // MARK: - Scanning
 
     private func scanLaunchServices() -> [AppItem] {
         guard let cls = NSClassFromString("LSApplicationWorkspace") as? NSObject.Type,
@@ -57,13 +110,17 @@ final class AppCatalog: ObservableObject {
             for appURL in contents where appURL.pathExtension == "app" {
                 guard let bundle = Bundle(url: appURL) else { continue }
                 let id = bundle.bundleIdentifier ?? appURL.deletingPathExtension().lastPathComponent
-                let name = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
-                    ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
-                    ?? appURL.deletingPathExtension().lastPathComponent
+                let name = displayName(for: bundle, fallback: appURL.deletingPathExtension().lastPathComponent)
                 let icon = workspace.icon(forFile: appURL.path)
                 items.append(AppItem(id: id, name: name, url: appURL, icon: icon))
             }
         }
         return items
+    }
+
+    private func displayName(for bundle: Bundle, fallback: String) -> String {
+        (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
+            ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
+            ?? fallback
     }
 }

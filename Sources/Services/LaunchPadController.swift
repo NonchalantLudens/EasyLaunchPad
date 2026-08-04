@@ -10,9 +10,11 @@ extension Notification.Name {
 final class LaunchPadController: ObservableObject {
     @Published private(set) var isVisible = false
     @Published private(set) var enteredFullScreen = false
+    @Published private(set) var deleteMode = false
 
     private var window: NSWindow?
     private var keyMonitor: Any?
+    private var flagsMonitor: Any?
     private var observers: [NSObjectProtocol] = []
     private var catalog: AppCatalog?
 
@@ -115,6 +117,10 @@ final class LaunchPadController: ObservableObject {
             }
             return event
         }
+        flagsMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+            self?.deleteMode = event.modifierFlags.contains(.option)
+            return event
+        }
     }
 
     private func closeWindow() {
@@ -126,6 +132,11 @@ final class LaunchPadController: ObservableObject {
             NSEvent.removeMonitor(keyMonitor)
             self.keyMonitor = nil
         }
+        if let flagsMonitor {
+            NSEvent.removeMonitor(flagsMonitor)
+            self.flagsMonitor = nil
+        }
+        deleteMode = false
         window?.close()
         window = nil
     }
