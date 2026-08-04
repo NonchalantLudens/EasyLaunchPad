@@ -20,13 +20,8 @@ final class AppCatalog: ObservableObject {
         let hiddenIDs = Set(hiddenRecords.map(\.id))
         var byID: [String: AppItem] = [:]
 
-        for item in scanLaunchServices() where !hiddenIDs.contains(item.id) && !trashedIDs.contains(item.id) {
+        for item in scanApplicationsFolders() where !hiddenIDs.contains(item.id) && !trashedIDs.contains(item.id) {
             byID[item.id] = item
-        }
-        for item in scanFileSystem() where !hiddenIDs.contains(item.id) && !trashedIDs.contains(item.id) {
-            if byID[item.id] == nil {
-                byID[item.id] = item
-            }
         }
         for url in manualURLs {
             guard let bundle = Bundle(url: url) else { continue }
@@ -76,26 +71,7 @@ final class AppCatalog: ObservableObject {
 
     // MARK: - Scanning
 
-    private func scanLaunchServices() -> [AppItem] {
-        guard let cls = NSClassFromString("LSApplicationWorkspace") as? NSObject.Type,
-              let lsWorkspace = cls.perform(Selector(("defaultWorkspace")))?.takeUnretainedValue() as? NSObject,
-              let proxies = lsWorkspace.perform(Selector(("allApplications")))?.takeUnretainedValue() as? [NSObject]
-        else {
-            return []
-        }
-        return proxies.compactMap { proxy -> AppItem? in
-            guard let id = proxy.value(forKey: "bundleIdentifier") as? String, !id.isEmpty else { return nil }
-            let name: String = {
-                guard let raw = proxy.value(forKey: "localizedName") as? String, !raw.isEmpty else { return id }
-                return raw
-            }()
-            let url = proxy.value(forKey: "bundleURL") as? URL
-            let icon = url.map { workspace.icon(forFile: $0.path) } ?? NSWorkspace.shared.icon(for: .application)
-            return AppItem(id: id, name: name, url: url, icon: icon)
-        }
-    }
-
-    private func scanFileSystem() -> [AppItem] {
+    private func scanApplicationsFolders() -> [AppItem] {
         var dirs: [String] = ["/Applications"]
         let home = NSHomeDirectory()
         dirs.append(home + "/Applications")

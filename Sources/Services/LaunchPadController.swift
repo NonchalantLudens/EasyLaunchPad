@@ -48,7 +48,7 @@ final class LaunchPadController: ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
         gridLayout = GridLayout.layout(for: CGSize(width: screen.frame.width, height: screen.frame.height - 120))
 
-        let window = NSWindow(
+        let window = LaunchPadWindow(
             contentRect: screen.frame,
             styleMask: [.borderless, .fullSizeContentView],
             backing: .buffered,
