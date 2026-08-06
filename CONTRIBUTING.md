@@ -77,6 +77,38 @@ BREAKING CHANGE: 变更 Bundle Identifier，旧安装需先卸载
 - `feat` / `fix` 提交应在发布时同步更新 `CHANGELOG.md`
 - 发布新版时 tag 格式：`v<MAJOR>.<MINOR>.<PATCH>`（见 AGENTS.md 发布流程）
 
+## README 规范
+
+涉及 `README.md` 的改动（`docs(readme)`）必须遵循以下排版约定，中英两版（`README.md` / `README.zh-CN.md`）同步修改：
+
+### 结构
+
+```
+# 项目名
+> slogan（一句话简介）
+[徽章行]（license / macOS / Swift / Release，shields.io）
+[语言切换链接]（[English](README.md) | [简体中文](README.zh-CN.md)）
+[简介段落]
+## 目录（Table of Contents，锚点链接，与下文章节一一对应）
+## 功能特性（要点列表，**加粗标题** — 描述 格式）
+## 系统要求（表格：项目/要求 两列）
+## 安装（分层小节：Homebrew → curl 脚本 → DMG/PKG；代码块带 bash 标注）
+## 使用指南（表格：操作/方式 两列）
+## 故障排查（H3 子标题 + 有序列表）
+## 从源码构建（bash 代码块，含测试与打包命令）
+## 项目结构（text 代码块树）
+## 参与贡献（链接 CONTRIBUTING.md）
+## 许可（[MIT](LICENSE) © 年份 作者）
+```
+
+### 约定
+
+- **徽章行**：置于标题与简介之间，使用 shields.io 静态徽章，主仓库必含 license 与 Release 徽章
+- **语言版本**：`README.md` 为英文主版本（GitHub 默认渲染），`README.zh-CN.md` 为中文版；两版章节结构完全对应，顶部互相链接
+- **表格**：需表头与对齐分隔行（`| --- |`），单元格内容不换行
+- **代码块**：一律标注语言（`bash` / `text`）
+- **中文版格式**：标题层级与英文一致；技术名词保留英文原词
+
 ## 代码结构约定
 
 ```
