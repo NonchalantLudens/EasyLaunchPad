@@ -44,7 +44,7 @@
 ```bash
 # 生成 Xcode 项目并构建
 xcodegen generate
-xcodebuild -project EasyLaunchPad.xcodeproj -scheme EasyLaunchPad build
+xcodebuild -project LaunchPad.xcodeproj -scheme LaunchPad build
 
 # 打包 DMG（含定制安装页面）
 ./scripts/build-dmg.sh
