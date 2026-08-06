@@ -4,16 +4,16 @@ import Combine
 import SwiftUI
 
 @MainActor
-final class LaunchPadController: ObservableObject {
+final class EasyLaunchPadController: ObservableObject {
     @Published private(set) var isVisible = false
     @Published private(set) var deleteMode = false
 
-    private var window: LaunchPadWindow?
+    private var window: EasyLaunchPadWindow?
     private var keyMonitor: Any?
     private var flagsMonitor: Any?
     private var gestureMonitor: Any?
     private var catalog: AppCatalog?
-    private var settings: LaunchpadSettings?
+    private var settings: EasyLaunchPadSettings?
     private var cancellables: Set<AnyCancellable> = []
 
     /// The screen the launchpad currently targets (mouse screen at show time).
@@ -31,7 +31,7 @@ final class LaunchPadController: ObservableObject {
         self.catalog = catalog
     }
 
-    func attachSettings(_ settings: LaunchpadSettings) {
+    func attachSettings(_ settings: EasyLaunchPadSettings) {
         self.settings = settings
         // @Published 在 willSet 发布：sink 触发时属性仍是旧值，
         // 必须使用传入的新值而不是回读属性。
@@ -55,7 +55,7 @@ final class LaunchPadController: ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
 
         if window == nil {
-            let window = LaunchPadWindow(
+            let window = EasyLaunchPadWindow(
                 contentRect: target.frame,
                 styleMask: [.borderless, .fullSizeContentView],
                 backing: .buffered,
@@ -116,7 +116,7 @@ final class LaunchPadController: ObservableObject {
     }
 
     private func makeContentView() -> NSHostingView<AnyView> {
-        let content = LaunchPadView()
+        let content = EasyLaunchPadView()
             .environmentObject(self)
         var root = AnyView(content)
         if let catalog {

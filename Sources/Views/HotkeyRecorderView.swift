@@ -3,7 +3,7 @@ import Carbon.HIToolbox
 import SwiftUI
 
 struct HotkeyRecorderView: View {
-    @EnvironmentObject private var settings: LaunchpadSettings
+    @EnvironmentObject private var settings: EasyLaunchPadSettings
     @State private var recording = false
     @State private var monitor: Any?
     @State private var hint: String?

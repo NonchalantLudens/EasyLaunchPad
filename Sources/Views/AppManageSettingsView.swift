@@ -22,7 +22,7 @@ struct AppManageSettingsView: View {
 
     private func addApp() {
         let panel = NSOpenPanel()
-        panel.title = "添加应用到 LaunchPad"
+        panel.title = "添加应用到 EasyLaunchPad"
         panel.allowedContentTypes = [.application]
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false

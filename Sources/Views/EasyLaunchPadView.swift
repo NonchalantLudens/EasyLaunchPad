@@ -2,10 +2,10 @@ import AppKit
 import Carbon.HIToolbox
 import SwiftUI
 
-struct LaunchPadView: View {
-    @EnvironmentObject private var controller: LaunchPadController
+struct EasyLaunchPadView: View {
+    @EnvironmentObject private var controller: EasyLaunchPadController
     @EnvironmentObject private var catalog: AppCatalog
-    @EnvironmentObject private var settings: LaunchpadSettings
+    @EnvironmentObject private var settings: EasyLaunchPadSettings
     @State private var appeared = false
     @State private var jigglePhase: Double = 0
     @State private var jiggleTimer: Timer?
@@ -139,7 +139,7 @@ struct LaunchPadView: View {
             ),
             presenting: pendingActionApp
         ) { app in
-            Button("从 LaunchPad 隐藏") {
+            Button("从 EasyLaunchPad 隐藏") {
                 catalog.hide(app)
             }
             Button("移到废纸篓", role: .destructive) {

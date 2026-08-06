@@ -8,9 +8,9 @@ final class AppState: ObservableObject {
     /// 避免多个 AppState 各自持有设置快照导致改动不生效。
     static let shared = AppState()
 
-    let controller = LaunchPadController()
+    let controller = EasyLaunchPadController()
     let catalog = AppCatalog()
-    let settings = LaunchpadSettings()
+    let settings = EasyLaunchPadSettings()
     private var shortcuts: ShortcutManager?
     private var cancellables: Set<AnyCancellable> = []
 
@@ -52,7 +52,7 @@ final class AppState: ObservableObject {
             .store(in: &cancellables)
     }
 
-    /// 快捷键录制期间暂停全局热键，避免录制 F 键时触发 LaunchPad。
+    /// 快捷键录制期间暂停全局热键，避免录制 F 键时触发 EasyLaunchPad。
     func setHotkeyPaused(_ paused: Bool) {
         if paused {
             shortcuts?.unregister()

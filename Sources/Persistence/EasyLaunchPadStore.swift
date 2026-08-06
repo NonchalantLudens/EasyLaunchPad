@@ -7,7 +7,7 @@ struct HiddenAppRecord: Codable, Equatable {
     let url: URL?
 }
 
-enum LaunchpadStore {
+enum EasyLaunchPadStore {
     private static let defaults = UserDefaults.standard
 
     private enum Key {

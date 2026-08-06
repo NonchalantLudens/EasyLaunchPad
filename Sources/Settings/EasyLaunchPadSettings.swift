@@ -3,30 +3,30 @@ import Combine
 import ServiceManagement
 
 @MainActor
-final class LaunchpadSettings: ObservableObject {
+final class EasyLaunchPadSettings: ObservableObject {
     @Published var hotkeyKeyCode: UInt32 {
-        didSet { LaunchpadStore.saveHotkey(keyCode: hotkeyKeyCode, modifiers: hotkeyModifiers) }
+        didSet { EasyLaunchPadStore.saveHotkey(keyCode: hotkeyKeyCode, modifiers: hotkeyModifiers) }
     }
     @Published var hotkeyModifiers: UInt32 {
-        didSet { LaunchpadStore.saveHotkey(keyCode: hotkeyKeyCode, modifiers: hotkeyModifiers) }
+        didSet { EasyLaunchPadStore.saveHotkey(keyCode: hotkeyKeyCode, modifiers: hotkeyModifiers) }
     }
     @Published var swipeEnabled: Bool {
-        didSet { LaunchpadStore.saveSwipeEnabled(swipeEnabled) }
+        didSet { EasyLaunchPadStore.saveSwipeEnabled(swipeEnabled) }
     }
     @Published var pinchEnabled: Bool {
-        didSet { LaunchpadStore.savePinchEnabled(pinchEnabled) }
+        didSet { EasyLaunchPadStore.savePinchEnabled(pinchEnabled) }
     }
     @Published var autoStart: Bool {
         didSet { applyAutoStart(autoStart) }
     }
     @Published var iconSize: IconSizeLevel {
-        didSet { LaunchpadStore.saveIconSize(iconSize) }
+        didSet { EasyLaunchPadStore.saveIconSize(iconSize) }
     }
     @Published var iconEntryAnimation: Bool {
-        didSet { LaunchpadStore.saveIconEntryAnimation(iconEntryAnimation) }
+        didSet { EasyLaunchPadStore.saveIconEntryAnimation(iconEntryAnimation) }
     }
     @Published var showSystemApps: Bool {
-        didSet { LaunchpadStore.saveShowSystemApps(showSystemApps) }
+        didSet { EasyLaunchPadStore.saveShowSystemApps(showSystemApps) }
     }
 
     /// Set by AppState when RegisterEventHotKey fails (conflict with another app).
@@ -35,14 +35,14 @@ final class LaunchpadSettings: ObservableObject {
     @Published var autoStartError: String?
 
     init() {
-        hotkeyKeyCode = LaunchpadStore.loadHotkeyKeyCode()
-        hotkeyModifiers = LaunchpadStore.loadHotkeyModifiers()
-        swipeEnabled = LaunchpadStore.loadSwipeEnabled()
-        pinchEnabled = LaunchpadStore.loadPinchEnabled()
-        autoStart = LaunchpadStore.loadAutoStart()
-        iconSize = LaunchpadStore.loadIconSize()
-        iconEntryAnimation = LaunchpadStore.loadIconEntryAnimation()
-        showSystemApps = LaunchpadStore.loadShowSystemApps()
+        hotkeyKeyCode = EasyLaunchPadStore.loadHotkeyKeyCode()
+        hotkeyModifiers = EasyLaunchPadStore.loadHotkeyModifiers()
+        swipeEnabled = EasyLaunchPadStore.loadSwipeEnabled()
+        pinchEnabled = EasyLaunchPadStore.loadPinchEnabled()
+        autoStart = EasyLaunchPadStore.loadAutoStart()
+        iconSize = EasyLaunchPadStore.loadIconSize()
+        iconEntryAnimation = EasyLaunchPadStore.loadIconEntryAnimation()
+        showSystemApps = EasyLaunchPadStore.loadShowSystemApps()
     }
 
     func autoStartStatusText() -> String {
@@ -59,7 +59,7 @@ final class LaunchpadSettings: ObservableObject {
     }
 
     private func applyAutoStart(_ enabled: Bool) {
-        LaunchpadStore.saveAutoStart(enabled)
+        EasyLaunchPadStore.saveAutoStart(enabled)
         autoStartError = nil
         do {
             if enabled {
@@ -68,7 +68,7 @@ final class LaunchpadSettings: ObservableObject {
                 try SMAppService.mainApp.unregister()
             }
         } catch {
-            autoStartError = "自动启动注册失败，请将 LaunchPad 移到 /Applications 后重试"
+            autoStartError = "自动启动注册失败，请将 EasyLaunchPad 移到 /Applications 后重试"
             if enabled {
                 autoStart = false
             }

@@ -12,7 +12,7 @@
 1. Fork 本仓库并克隆
 2. 创建功能分支：`git checkout -b feat/your-feature`
 3. 修改代码，保持既有风格（Swift + SwiftUI，见下方结构约定）
-4. 运行测试：`xcodebuild -project LaunchPad.xcodeproj -scheme LaunchPad test`
+4. 运行测试：`xcodebuild -project EasyLaunchPad.xcodeproj -scheme EasyLaunchPad test`
 5. 提交（遵循提交信息规范），推送并创建 Pull Request
 
 ## 提交信息规范

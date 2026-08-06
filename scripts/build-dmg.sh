@@ -5,11 +5,11 @@ cd "$(dirname "$0")/.."
 VERSION=$(grep MARKETING_VERSION project.yml | head -1 | awk '{print $2}')
 OUT_DIR="build"
 DERIVED="$OUT_DIR/DerivedData"
-APP="$DERIVED/Build/Products/Release/LaunchPad.app"
+APP="$DERIVED/Build/Products/Release/EasyLaunchPad.app"
 STAGING="$OUT_DIR/dmg"
-RAW_DMG="$OUT_DIR/LaunchPad-tmp.dmg"
-DMG="$OUT_DIR/LaunchPad-$VERSION.dmg"
-VOLNAME="LaunchPad"
+RAW_DMG="$OUT_DIR/EasyLaunchPad-tmp.dmg"
+DMG="$OUT_DIR/EasyLaunchPad-$VERSION.dmg"
+VOLNAME="EasyLaunchPad"
 
 xcodegen generate
 
@@ -25,8 +25,8 @@ else
 fi
 
 xcodebuild \
-    -project LaunchPad.xcodeproj \
-    -scheme LaunchPad \
+    -project EasyLaunchPad.xcodeproj \
+    -scheme EasyLaunchPad \
     -configuration Release \
     -derivedDataPath "$DERIVED" \
     "${SIGN_ARGS[@]}" \
@@ -79,7 +79,7 @@ tell application "Finder"
     set icon size of opts to 88
     set background picture of opts to (POSIX file "$MOUNT_POINT/.background/install-bg.png" as alias)
     -- 图标按内容区（480x272）垂直居中：中心 y=136，成对水平居中
-    set position of item "LaunchPad.app" of container window to {178, 136}
+    set position of item "EasyLaunchPad.app" of container window to {178, 136}
     set position of item "Applications" of container window to {302, 136}
     close
   end tell

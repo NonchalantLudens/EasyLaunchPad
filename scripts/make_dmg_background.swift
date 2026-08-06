@@ -43,7 +43,7 @@ func drawText(_ string: String, center: NSPoint, fontSize: CGFloat, color: NSCol
     let s = attr.size()
     attr.draw(at: NSPoint(x: center.x - s.width / 2, y: center.y - s.height / 2))
 }
-drawText("将 LaunchPad 拖入 Applications 文件夹以安装",
+drawText("将 EasyLaunchPad 拖入 Applications 文件夹以安装",
          center: NSPoint(x: CGFloat(W) / 2, y: CGFloat(textY)), fontSize: 15,
          color: NSColor(calibratedRed: 0.20, green: 0.24, blue: 0.34, alpha: 1))
 

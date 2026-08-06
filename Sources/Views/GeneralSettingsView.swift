@@ -3,14 +3,14 @@ import SwiftUI
 
 struct GeneralSettingsView: View {
     @EnvironmentObject private var state: AppState
-    @EnvironmentObject private var settings: LaunchpadSettings
+    @EnvironmentObject private var settings: EasyLaunchPadSettings
     @State private var statusText = ""
 
     var body: some View {
         Form {
             Section("快捷键") {
                 HStack {
-                    Text("呼出 / 关闭 LaunchPad")
+                    Text("呼出 / 关闭 EasyLaunchPad")
                     Spacer()
                     HotkeyRecorderView { paused in
                         state.setHotkeyPaused(paused)

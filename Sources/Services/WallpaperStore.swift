@@ -1,7 +1,7 @@
 import AppKit
 import CoreImage
 
-/// 加载当前桌面壁纸并做高斯模糊，用作 LaunchPad 背景（还原经典"模糊壁纸压暗"观感）。
+/// 加载当前桌面壁纸并做高斯模糊，用作 EasyLaunchPad 背景（还原经典"模糊壁纸压暗"观感）。
 final class WallpaperStore {
     static let shared = WallpaperStore()
 

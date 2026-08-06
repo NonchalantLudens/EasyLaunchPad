@@ -1,5 +1,5 @@
 import XCTest
-@testable import LaunchPad
+@testable import EasyLaunchPad
 
 final class IconSizeLevelTests: XCTestCase {
     func testFourLevels() {

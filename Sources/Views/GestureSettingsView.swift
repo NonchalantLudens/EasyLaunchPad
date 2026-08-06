@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct GestureSettingsView: View {
-    @EnvironmentObject private var settings: LaunchpadSettings
+    @EnvironmentObject private var settings: EasyLaunchPadSettings
 
     var body: some View {
         Form {

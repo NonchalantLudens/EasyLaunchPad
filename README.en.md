@@ -44,7 +44,7 @@ A full-screen app launcher that recreates the classic Launchpad experience. On m
 ```bash
 # Generate the Xcode project and build
 xcodegen generate
-xcodebuild -project LaunchPad.xcodeproj -scheme LaunchPad build
+xcodebuild -project EasyLaunchPad.xcodeproj -scheme EasyLaunchPad build
 
 # Build the DMG (with a customized install page)
 ./scripts/build-dmg.sh

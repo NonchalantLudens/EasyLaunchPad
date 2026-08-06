@@ -15,7 +15,7 @@ struct AboutSettingsView: View {
             Image(nsImage: NSApp.applicationIconImage)
                 .resizable()
                 .frame(width: 96, height: 96)
-            Text("LaunchPad")
+            Text("EasyLaunchPad")
                 .font(.title2.weight(.semibold))
             Text("版本 \(version) (\(build))")
                 .font(.callout)

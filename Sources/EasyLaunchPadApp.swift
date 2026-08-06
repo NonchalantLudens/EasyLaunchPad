@@ -1,12 +1,12 @@
 import SwiftUI
 
 @main
-struct LaunchPadApp: App {
+struct EasyLaunchPadApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     private let state = AppState.shared
 
     var body: some Scene {
-        MenuBarExtra("LaunchPad", systemImage: "square.grid.3x3") {
+        MenuBarExtra("EasyLaunchPad", systemImage: "square.grid.3x3") {
             MenuBarMenuView()
                 .environmentObject(state)
         }

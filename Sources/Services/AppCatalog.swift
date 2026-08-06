@@ -15,8 +15,8 @@ final class AppCatalog: ObservableObject {
     var includeSystemApps = true
 
     init() {
-        hiddenRecords = LaunchpadStore.loadHiddenApps()
-        manualURLs = LaunchpadStore.loadManualURLs()
+        hiddenRecords = EasyLaunchPadStore.loadHiddenApps()
+        manualURLs = EasyLaunchPadStore.loadManualURLs()
     }
 
     /// 合并同一事件循环内的多次刷新，目录扫描在后台执行，
@@ -81,26 +81,26 @@ final class AppCatalog: ObservableObject {
     func hide(_ app: AppItem) {
         guard !hiddenRecords.contains(where: { $0.id == app.id }) else { return }
         hiddenRecords.append(HiddenAppRecord(id: app.id, name: app.name, url: app.url))
-        LaunchpadStore.saveHiddenApps(hiddenRecords)
+        EasyLaunchPadStore.saveHiddenApps(hiddenRecords)
         refresh()
     }
 
     func unhide(_ id: String) {
         hiddenRecords.removeAll { $0.id == id }
-        LaunchpadStore.saveHiddenApps(hiddenRecords)
+        EasyLaunchPadStore.saveHiddenApps(hiddenRecords)
         refresh()
     }
 
     func addManual(_ url: URL) {
         guard !manualURLs.contains(url) else { return }
         manualURLs.append(url)
-        LaunchpadStore.saveManualURLs(manualURLs)
+        EasyLaunchPadStore.saveManualURLs(manualURLs)
         refresh()
     }
 
     func removeManual(_ url: URL) {
         manualURLs.removeAll { $0 == url }
-        LaunchpadStore.saveManualURLs(manualURLs)
+        EasyLaunchPadStore.saveManualURLs(manualURLs)
         refresh()
     }
 

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var state: AppState
-    @EnvironmentObject private var settings: LaunchpadSettings
+    @EnvironmentObject private var settings: EasyLaunchPadSettings
     @EnvironmentObject private var catalog: AppCatalog
 
     var body: some View {

@@ -1,6 +1,6 @@
 import AppKit
 
-final class LaunchPadWindow: NSWindow {
+final class EasyLaunchPadWindow: NSWindow {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
 }
