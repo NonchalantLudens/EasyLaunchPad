@@ -42,6 +42,22 @@ Press **F4** (or your custom hotkey) to open the launcher.
 
 > Auto-launch at login requires the app to be installed in `/Applications`, then enable Settings → General → Launch at login.
 
+## Troubleshooting
+
+### "Apple cannot verify EasyLaunchPad is free of malware" / "Cannot verify the developer"
+
+The app is not notarized yet (requires a Developer ID certificate), so Gatekeeper may block the first launch. To open it:
+
+1. **Right-click** (or Control-click) **EasyLaunchPad** in the Applications folder → select **Open** → click **Open** in the dialog.
+2. Or open **System Settings → Privacy & Security** → click **Open Anyway** next to the app.
+3. Or remove the quarantine flag from the terminal:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/EasyLaunchPad.app
+```
+
+> Homebrew installs (`brew install --cask easylaunchpad`) are not affected.
+
 ## Usage
 
 | Action | How |

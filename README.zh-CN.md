@@ -42,6 +42,22 @@
 
 > 开机自启动需将应用安装在 `/Applications` 后，在 设置 → 通用 → 登录时自动启动 中开启。
 
+## 故障排查
+
+### 「Apple 无法检查 EasyLaunchPad 是否包含恶意软件」/「无法验证开发者」
+
+应用暂未公证（需要 Developer ID 证书），Gatekeeper 可能在首次打开时拦截。解决方法任选其一：
+
+1. 在「应用程序」文件夹中**右键点击**（或按住 Control 点击）EasyLaunchPad → 选择**打开** → 在弹窗中点击**打开**
+2. 或前往**系统设置 → 隐私与安全性** → 在应用旁点击**仍要打开**
+3. 或在终端移除隔离属性：
+
+```bash
+xattr -dr com.apple.quarantine /Applications/EasyLaunchPad.app
+```
+
+> 通过 Homebrew 安装（`brew install --cask easylaunchpad`）不受影响。
+
 ## 使用指南
 
 | 操作 | 方式 |

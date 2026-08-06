@@ -8,4 +8,6 @@ cask "easylaunchpad" do
   homepage "https://github.com/NonchalantLudens/EasyLaunchPad"
 
   app "EasyLaunchPad.app"
+
+  quarantine false
 end
