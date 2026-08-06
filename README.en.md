@@ -22,9 +22,12 @@ A full-screen app launcher that recreates the classic Launchpad experience. On m
 
 ## Installation
 
-1. Download the latest `.dmg` from the [Releases](https://github.com/NonchalantLudens/EasyLaunchPad/releases) page
-2. Drag EasyLaunchPad into the Applications folder
-3. Press **F4** (or your custom hotkey) to open the launcher
+Download the installer from the [Releases](https://github.com/NonchalantLudens/EasyLaunchPad/releases) page, either way:
+
+- **DMG**: download the `.dmg` and drag EasyLaunchPad into the Applications folder
+- **PKG installer**: download the `.pkg` and follow the installation wizard
+
+Press **F4** (or your custom hotkey) to open the launcher.
 
 > Auto-launch at login requires the app to be installed in `/Applications`, then enable Settings → General → Launch at login.
 

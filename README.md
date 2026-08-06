@@ -22,9 +22,12 @@
 
 ## 安装
 
-1. 从 [Releases](https://github.com/NonchalantLudens/EasyLaunchPad/releases) 下载最新的 `.dmg`
-2. 将 EasyLaunchPad 拖入「应用程序」文件夹
-3. 按 **F4**（或自定义快捷键）呼出 Launchpad
+从 [Releases](https://github.com/NonchalantLudens/EasyLaunchPad/releases) 下载安装包，两种方式任选其一：
+
+- **DMG**：下载 `.dmg`，将 EasyLaunchPad 拖入「应用程序」文件夹
+- **PKG 安装包**：下载 `.pkg`，双击按向导安装到 /Applications
+
+按 **F4**（或自定义快捷键）呼出 Launchpad。
 
 > 开机自启动需将应用安装在 `/Applications` 后，在 设置 → 通用 → 登录时自动启动 中开启。
 
@@ -48,6 +51,11 @@ xcodebuild -project EasyLaunchPad.xcodeproj -scheme EasyLaunchPad build
 
 # 打包 DMG（含定制安装页面）
 ./scripts/build-dmg.sh
+
+# 打包 PKG 安装包
+pkgbuild --component build/DerivedData/Build/Products/Release/EasyLaunchPad.app \
+  --install-location /Applications --version 0.1.0 \
+  --identifier com.easylaunchpad.app build/EasyLaunchPad-0.1.0.pkg
 ```
 
 ## 项目结构
