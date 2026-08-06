@@ -22,8 +22,9 @@
 
 ## 安装
 
-从 [Releases](https://github.com/NonchalantLudens/EasyLaunchPad/releases) 下载安装包，两种方式任选其一：
+从 [Releases](https://github.com/NonchalantLudens/EasyLaunchPad/releases) 下载安装包，任选其一：
 
+- **Homebrew**（推荐）：`brew tap NonchalantLudens/tap && brew install --cask easylaunchpad`
 - **DMG**：下载 `.dmg`，将 EasyLaunchPad 拖入「应用程序」文件夹
 - **PKG 安装包**：下载 `.pkg`，双击按向导安装到 /Applications
 
