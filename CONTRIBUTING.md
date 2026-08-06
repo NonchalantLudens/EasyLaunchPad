@@ -17,15 +17,65 @@
 
 ## 提交信息规范
 
-使用 Conventional Commits 风格，前缀：`feat` / `fix` / `perf` / `docs` / `refactor` / `chore` / `test` / `icon`。
+遵循 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/) 风格。
 
-示例：
+### 格式
 
 ```
-feat: 增加 xxx 功能
-fix: 修复 xxx 问题
-perf: 优化 xxx 性能
+<type>(<scope>): <description>
+
+<可选正文：说明动机与影响>
+
+<可选 footer：BREAKING CHANGE / 关联 issue>
 ```
+
+### 类型（type）
+
+| 类型 | 用途 | 示例 |
+|---|---|---|
+| `feat` | 新功能 | `feat: 增加图标大小分级设置` |
+| `fix` | 缺陷修复 | `fix: 修复隐藏应用不实时刷新` |
+| `perf` | 性能优化 | `perf: 目录扫描移至后台队列` |
+| `refactor` | 重构（不改行为） | `refactor: 统一更名为 EasyLaunchPad` |
+| `docs` | 文档 | `docs: 补充 README 安装说明` |
+| `test` | 测试 | `test: 新增分页边界用例` |
+| `chore` | 构建/工具/杂项 | `chore: 更新 .gitignore` |
+| `icon` | 图标资源 | `icon: app.svg 增加内边距` |
+| `tweak` | 微调（动画参数等） | `tweak: 切页动画缩短至 0.18s` |
+
+### 范围（scope，可选）
+
+指向改动模块：`controller`、`catalog`、`settings`、`view`、`grid`、`scripts`、`cask`、`readme` 等。
+
+### 描述要求
+
+- 祈使句、简洁（建议 ≤ 72 字符）、说明"做了什么"而非"怎么做"
+- 中文或英文均可，与正文语言保持一致；项目默认中文
+- 描述不要以句号结尾
+
+### 示例
+
+```
+feat(settings): 增加「显示系统应用」开关
+fix(controller): 修复退出动画黑屏闪烁
+perf(catalog): 目录扫描移至后台并合并刷新
+docs: 补充 Homebrew 安装方式
+```
+
+### 破坏性变更
+
+行为不兼容时在 footer 注明：
+
+```
+refactor!: bundle ID 更改为 com.easylaunchpad.app
+
+BREAKING CHANGE: 变更 Bundle Identifier，旧安装需先卸载
+```
+
+### 与发布的关系
+
+- `feat` / `fix` 提交应在发布时同步更新 `CHANGELOG.md`
+- 发布新版时 tag 格式：`v<MAJOR>.<MINOR>.<PATCH>`（见 AGENTS.md 发布流程）
 
 ## 代码结构约定
 
