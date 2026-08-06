@@ -22,11 +22,19 @@
 
 ## 安装
 
-从 [Releases](https://github.com/NonchalantLudens/EasyLaunchPad/releases) 下载安装包，任选其一：
+任选其一：
 
-- **Homebrew**（推荐）：`brew tap NonchalantLudens/tap && brew install --cask easylaunchpad`
-- **DMG**：下载 `.dmg`，将 EasyLaunchPad 拖入「应用程序」文件夹
-- **PKG 安装包**：下载 `.pkg`，双击按向导安装到 /Applications
+- **Homebrew**（推荐）：cask 定义随源码维护在本仓库
+  ```bash
+  brew tap NonchalantLudens/EasyLaunchPad https://github.com/NonchalantLudens/EasyLaunchPad.git
+  brew install --cask easylaunchpad
+  ```
+- **curl 脚本**：自动下载最新版、校验 SHA-256 并安装到 /Applications
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/NonchalantLudens/EasyLaunchPad/main/scripts/install.sh | bash
+  ```
+- **DMG**：从 [Releases](https://github.com/NonchalantLudens/EasyLaunchPad/releases) 下载，拖入「应用程序」文件夹
+- **PKG 安装包**：从 Releases 下载，双击按向导安装
 
 按 **F4**（或自定义快捷键）呼出 Launchpad。
 

@@ -22,11 +22,19 @@ A full-screen app launcher that recreates the classic Launchpad experience. On m
 
 ## Installation
 
-Download the installer from the [Releases](https://github.com/NonchalantLudens/EasyLaunchPad/releases) page, any of:
+Any of the following:
 
-- **Homebrew** (recommended): `brew tap NonchalantLudens/tap && brew install --cask easylaunchpad`
-- **DMG**: download the `.dmg` and drag EasyLaunchPad into the Applications folder
-- **PKG installer**: download the `.pkg` and follow the installation wizard
+- **Homebrew** (recommended): the cask definition lives in this repository
+  ```bash
+  brew tap NonchalantLudens/EasyLaunchPad https://github.com/NonchalantLudens/EasyLaunchPad.git
+  brew install --cask easylaunchpad
+  ```
+- **curl script**: downloads the latest release, verifies SHA-256 and installs to /Applications
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/NonchalantLudens/EasyLaunchPad/main/scripts/install.sh | bash
+  ```
+- **DMG**: download from the [Releases](https://github.com/NonchalantLudens/EasyLaunchPad/releases) page and drag EasyLaunchPad into the Applications folder
+- **PKG installer**: download from Releases and follow the installation wizard
 
 Press **F4** (or your custom hotkey) to open the launcher.
 
