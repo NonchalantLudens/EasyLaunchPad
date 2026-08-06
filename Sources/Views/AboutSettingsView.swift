@@ -20,15 +20,18 @@ struct AboutSettingsView: View {
             Text("版本 \(version) (\(build))")
                 .font(.callout)
                 .foregroundStyle(.secondary)
-            Text("还原经典 Launchpad 的全屏应用启动器：网格分页、实时搜索、删除模式、触控板手势与全局快捷键。")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 320)
-            Text("SwiftUI · macOS 15+")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text("© 2026")
+            Button {
+                if let url = URL(string: "https://github.com/NonchalantLudens/EasyLaunchPad") {
+                    NSWorkspace.shared.open(url)
+                }
+            } label: {
+                Text("GitHub 仓库")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .underline()
+            }
+            .buttonStyle(.plain)
+            Text("© 2026 NonchalantLudens")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }

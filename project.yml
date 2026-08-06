@@ -29,6 +29,7 @@ targets:
         CFBundleDisplayName: EasyLaunchPad
         LSMinimumSystemVersion: "15.0"
         NSHighResolutionCapable: true
+        NSHumanReadableCopyright: "© 2026 NonchalantLudens"
   EasyLaunchPadTests:
     type: bundle.unit-test
     platform: macOS
