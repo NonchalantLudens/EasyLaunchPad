@@ -1,0 +1,40 @@
+# Changelog
+
+本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+
+## [0.1.0] - 2026-08
+
+首个公开版本。基于 macOS 15+ 还原经典 Launchpad 体验。
+
+### 新增
+
+- 全屏覆盖层窗口：即时呼出/关闭，无 Space 切换延迟
+- 模糊壁纸背景（`NSWorkspace.desktopImageURL` + CIFilter 高斯模糊）+ 渐变暗层
+- 应用扫描：`/Applications`、`/System/Applications`（可开关）、`~/Applications`，按 bundle ID 去重
+- 多页网格 + 分页圆点 + 平滑切页动画（0.18s）
+- 实时搜索：输入即过滤 + 匹配高亮
+- 全局快捷键（默认 F4）：Carbon `RegisterEventHotKey`，设置页录制器 + 冲突检测
+- 键盘导航：方向键 / 左右切页 / Home-End / 回车打开 / Esc 退出
+- 触控板手势：滑动与滚轮切页（档位防抖）、捏合关闭
+- 删除模式：Option 抖动 + 徽标 → 隐藏 / 移入废纸篓
+- 隐藏应用管理（菜单栏子菜单 + 设置页），持久化于 UserDefaults
+- 手动添加应用（NSOpenPanel）
+- 设置页：热键录制、手势开关、自启动（SMAppService）、4 级图标大小、图标入场动画开关、系统应用开关、关于页
+- 点击空白区域退出
+- 多显示器支持：按鼠标所在屏幕呼出
+
+### 性能
+
+- 目录扫描后台化 + 刷新合并（同事件循环去重）
+- 图标异步加载 + 启动预热（NSCache 有界缓存）
+- 壁纸模糊一次性缓存
+- 窗口级 alpha 淡入淡出（单一 GPU 合成）
+- 图标入场动画（逐行弹性上弹）可开关
+
+### 打包与发布
+
+- `scripts/build-dmg.sh`：Release 构建 + 签名 + 定制安装页 DMG
+- 应用图标（app.svg 全套尺寸）
+- MIT 许可
+
+[0.1.0]: https://github.com/NonchalantLudens/EasyLaunchPad/releases/tag/v0.1.0
