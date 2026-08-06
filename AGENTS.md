@@ -6,8 +6,7 @@ EasyLaunchPad：macOS 15+ 还原经典 Launchpad 的全屏应用启动器（Swif
 
 ## GitHub
 
-- 账户：NonchalantLudens
-- 提交身份：NonchalantLudens <313895547+NonchalantLudens@users.noreply.github.com>
+- 账户与提交身份等登录信息统一保存在 `~/.config/opencode/credentials.md`（权限 600，禁止提交仓库），需要时读取
 - 仓库：https://github.com/NonchalantLudens/EasyLaunchPad（origin，公开，MIT 协议）
 - 推送：直接 `git push`（仓库级 gh 凭据助手已配置，无需交互）
 
