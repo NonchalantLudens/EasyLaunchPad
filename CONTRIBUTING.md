@@ -2,9 +2,6 @@
 
 欢迎贡献！请遵循以下约定。
 
-> 本规范基于跨项目通用模板 [docs/CONTRIBUTING.template.md](docs/CONTRIBUTING.template.md)，
-> 其它项目可复制该模板并按需裁剪。规范更新时以模板为准。
-
 ## 开发环境
 
 - macOS 15.0+，Xcode 26+
