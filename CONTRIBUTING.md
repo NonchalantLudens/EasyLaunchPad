@@ -37,11 +37,12 @@
 | `fix` | 缺陷修复 | `fix: 修复隐藏应用不实时刷新` |
 | `perf` | 性能优化 | `perf: 目录扫描移至后台队列` |
 | `refactor` | 重构（不改行为） | `refactor: 统一更名为 EasyLaunchPad` |
-| `docs` | 文档 | `docs: 补充 README 安装说明` |
+| `docs` | 文档（含 README/About 信息） | `docs: 补充 README 安装说明` |
 | `test` | 测试 | `test: 新增分页边界用例` |
 | `chore` | 构建/工具/杂项 | `chore: 更新 .gitignore` |
 | `icon` | 图标资源 | `icon: app.svg 增加内边距` |
 | `tweak` | 微调（动画参数等） | `tweak: 切页动画缩短至 0.18s` |
+| `release` | 版本发布（版本号/打包/发布同步） | `release: v0.2.0` |
 
 ### 范围（scope，可选）
 
@@ -76,6 +77,50 @@ BREAKING CHANGE: 变更 Bundle Identifier，旧安装需先卸载
 
 - `feat` / `fix` 提交应在发布时同步更新 `CHANGELOG.md`
 - 发布新版时 tag 格式：`v<MAJOR>.<MINOR>.<PATCH>`（见 AGENTS.md 发布流程）
+
+## Release 发布规范
+
+发版操作统一使用 `release` 类型提交（`release: vX.Y.Z`），并遵循 AGENTS.md 发布流程。版本发布涉及以下文件的同步更新：
+
+| 文件 | 同步内容 | 变更类型 |
+|---|---|---|
+| `project.yml` | `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` | `release` |
+| `CHANGELOG.md` | 新增版本条目（语义化版本） | 随 `release` 提交 |
+| `Casks/e/easylaunchpad.rb` | `version` 与 `sha256`（DMG 校验和） | `chore(cask)` |
+| Release 资产 | DMG / PKG 重新打包上传，notes 附 SHA-256 | `gh release` |
+| tag | `v<MAJOR>.<MINOR>.<PATCH>`，指向发布提交 | `git tag` |
+
+### 发布提交要求
+
+- 版本号与 tag 三者一致：`MARKETING_VERSION`、`CHANGELOG` 条目、tag 名
+- Release notes 必须包含：功能亮点、安装方式、DMG 与 PKG 的 SHA-256 校验和
+- 打包产物（DMG/PKG）不入库（`build/` 已忽略），仅通过 Release 资产分发
+- 发布后验证：`brew install --cask easylaunchpad` 与 `scripts/install.sh` 均可安装新版本
+
+### 重新打包后必须同步
+
+应用打包产物变更后，以下内容必须同步，否则安装校验失败：
+
+- `Casks/e/easylaunchpad.rb` 的 `sha256`（与新版 DMG 一致）
+- Release notes 中的校验和
+- 若 About 页含版本相关静态信息，同步更新（见下方 About 规范）
+
+## About 关于页规范
+
+关于页信息（`Sources/Views/AboutSettingsView.swift`）与项目元数据保持一致：
+
+| 信息 | 数据源 | 同步要求 |
+|---|---|---|
+| 应用名称 | 静态文本 | 与项目名一致（EasyLaunchPad） |
+| 版本 / 构建号 | Bundle 动态读取 | 自动同步，无需手动维护 |
+| 仓库链接 | 静态 URL | 仓库迁移/改名时同步更新 |
+| 版权行 | 静态文本 | 与 `LICENSE`、`project.yml` 的 `NSHumanReadableCopyright` 三者一致 |
+
+### 约定
+
+- 版权行格式：`© <年份> <作者>`；年份变更或作者变更时，**三处同步**：`AboutSettingsView`、`project.yml`（`NSHumanReadableCopyright`）、`LICENSE`
+- 仓库 URL 变更时同步：`AboutSettingsView` 链接、`Casks` 的 `url`/`homepage`、`scripts/install.sh` 的 `REPO`、README 全部链接
+- About 页信息变更使用 `docs(about)` 提交，并重新打包同步 Release 资产
 
 ## README 规范
 
