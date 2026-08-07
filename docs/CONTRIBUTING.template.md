@@ -83,7 +83,7 @@ BREAKING CHANGE: 说明不兼容影响与迁移方式
 ### 发布提交要求
 
 - 版本号与 tag 三者一致：版本配置、`CHANGELOG` 条目、tag 名
-- Release notes 必须包含：功能亮点、安装方式、各安装包的校验和（SHA-256）
+- Release notes 必须包含：功能亮点、安装方式、各安装包的校验和（SHA-256），**中英双语**（见下方双语规范）
 - 打包产物不入库（加入 `.gitignore`），仅通过 Release 资产分发
 - 发布后验证：所有安装方式均可安装新版本
 
@@ -111,6 +111,30 @@ BREAKING CHANGE: 说明不兼容影响与迁移方式
 - 版权行格式：`© <年份> <作者>`；年份或作者变更时，**多处同步**：About 页、平台版权配置（如 `NSHumanReadableCopyright`）、`LICENSE`
 - 仓库 URL 变更时同步：About 页链接、分发配置（`Casks` 的 `url`/`homepage`）、安装脚本中的 `REPO`、README 全部链接
 - About 页信息变更使用 `docs(about)` 提交，并重新打包同步 Release 资产
+- About 页文案**中英双语**（见下方双语规范）
+
+## 双语规范（通用标准）
+
+> 面向用户的内容必须中英双语覆盖；内部技术文档（本文档、AGENTS.md 等）默认中文，不受本条约束。
+
+### 适用范围
+
+以下内容**必须**中英双语：
+
+| 内容 | 形式 | 要求 |
+|---|---|---|
+| `README.md` | 双文件 | 英文主版 + `README.zh-CN.md` 中文版，结构对应、顶部互链（见 README 规范） |
+| About 页 | 双语文案 | 描述文案中英并列，或按系统语言本地化（String Catalog / `Localizable.strings`） |
+| Release notes | 双语文案 | 功能亮点、安装方式、校验和说明使用中英双语段落 |
+| `CHANGELOG.md` | 双语摘要 | 每个版本条目提供中英双语标题与摘要（如 `### 新增 / Added`） |
+| 用户可见 UI 文案 | 本地化 | 遵循平台本地化机制（macOS: String Catalog；Web: i18n） |
+
+### 约定
+
+- 英文为主版本、中文为翻译版，两版内容必须同步，改动时同时提交
+- 技术名词（Live Photo、RAW、Bundle ID、GitHub 等）保留英文原词，不翻译
+- 名称与固定格式（应用名、`© <年份> <作者>` 版权行、校验和）不参与翻译
+- 提交信息语言与正文语言一致（见提交信息规范），不受本条约束
 
 ## README 规范
 
