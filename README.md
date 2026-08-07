@@ -134,7 +134,7 @@ Casks/             # Homebrew cask definition
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on the code of conduct and the process for submitting pull requests.
+Contributions are welcome. Please submit a pull request or open an issue.
 
 ## License
 

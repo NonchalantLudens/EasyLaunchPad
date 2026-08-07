@@ -134,7 +134,7 @@ Casks/             # Homebrew cask 定义
 
 ## 参与贡献
 
-请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 了解行为准则与提交流程。
+欢迎贡献。请提交 Pull Request 或提交 Issue。
 
 ## 许可
 
