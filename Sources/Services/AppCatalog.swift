@@ -10,6 +10,8 @@ final class AppCatalog: ObservableObject {
     private var trashedIDs: Set<String> = []
     private let selfBundleID = Bundle.main.bundleIdentifier ?? ""
     private var refreshScheduled = false
+    private var directoryMonitors: [DispatchSourceFileSystemObject] = []
+    private var refreshTimer: Timer?
 
     /// 是否扫描 /System/Applications（系统应用，如计算器）。
     var includeSystemApps = true
@@ -27,6 +29,36 @@ final class AppCatalog: ObservableObject {
         Task { @MainActor in
             refreshScheduled = false
             await performRefresh()
+        }
+    }
+
+    /// 监控应用目录变化（安装/卸载/移动应用时实时刷新列表）。
+    func startMonitoring() {
+        let dirs = ["/Applications", "/System/Applications", NSHomeDirectory() + "/Applications"]
+        for dir in dirs {
+            let fd = open(dir, O_EVTONLY)
+            guard fd >= 0 else { continue }
+            let source = DispatchSource.makeFileSystemObjectSource(
+                fileDescriptor: fd,
+                eventMask: [.write, .delete, .rename, .attrib],
+                queue: .main
+            )
+            source.setEventHandler { [weak self] in
+                self?.scheduleRefresh()
+            }
+            source.setCancelHandler {
+                close(fd)
+            }
+            source.resume()
+            directoryMonitors.append(source)
+        }
+    }
+
+    /// 目录事件防抖：安装/卸载过程中的多次事件合并为一次刷新。
+    private func scheduleRefresh() {
+        refreshTimer?.invalidate()
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+            self?.refresh()
         }
     }
 

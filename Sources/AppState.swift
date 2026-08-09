@@ -16,6 +16,7 @@ final class AppState: ObservableObject {
 
     init() {
         catalog.refresh()
+        catalog.startMonitoring()
         WallpaperStore.shared.preloadMainScreen()
         controller.attachCatalog(catalog)
         controller.attachSettings(settings)
