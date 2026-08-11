@@ -28,6 +28,9 @@ final class EasyLaunchPadSettings: ObservableObject {
     @Published var showSystemApps: Bool {
         didSet { EasyLaunchPadStore.saveShowSystemApps(showSystemApps) }
     }
+    @Published var autoCheckUpdates: Bool {
+        didSet { EasyLaunchPadStore.saveAutoCheckUpdates(autoCheckUpdates) }
+    }
 
     /// Set by AppState when RegisterEventHotKey fails (conflict with another app).
     @Published var hotkeyConflict = false
@@ -43,6 +46,7 @@ final class EasyLaunchPadSettings: ObservableObject {
         iconSize = EasyLaunchPadStore.loadIconSize()
         iconEntryAnimation = EasyLaunchPadStore.loadIconEntryAnimation()
         showSystemApps = EasyLaunchPadStore.loadShowSystemApps()
+        autoCheckUpdates = EasyLaunchPadStore.loadAutoCheckUpdates()
     }
 
     func autoStartStatusText() -> String {

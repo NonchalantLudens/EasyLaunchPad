@@ -11,6 +11,7 @@ final class AppState: ObservableObject {
     let controller = EasyLaunchPadController()
     let catalog = AppCatalog()
     let settings = EasyLaunchPadSettings()
+    lazy var updateManager = UpdateManager()
     private var shortcuts: ShortcutManager?
     private var cancellables: Set<AnyCancellable> = []
 
@@ -18,6 +19,19 @@ final class AppState: ObservableObject {
         catalog.refresh()
         catalog.startMonitoring()
         WallpaperStore.shared.preloadMainScreen()
+        if settings.autoCheckUpdates {
+            updateManager.startAutoCheck()
+        }
+        settings.$autoCheckUpdates
+            .sink { [weak self] enabled in
+                guard let self else { return }
+                if enabled {
+                    self.updateManager.startAutoCheck()
+                } else {
+                    self.updateManager.stopAutoCheck()
+                }
+            }
+            .store(in: &cancellables)
         controller.attachCatalog(catalog)
         controller.attachSettings(settings)
         catalog.includeSystemApps = settings.showSystemApps

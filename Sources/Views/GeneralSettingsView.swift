@@ -46,6 +46,18 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            Section("软件更新") {
+                Toggle("自动检查更新", isOn: $settings.autoCheckUpdates)
+                HStack {
+                    Text("当前版本 \(state.updateManager.currentVersion)")
+                    Spacer()
+                    Button(state.updateManager.state == .checking ? "检查中…" : "检查更新") {
+                        state.updateManager.checkForUpdates()
+                    }
+                    .disabled(state.updateManager.state == .checking)
+                }
+                updateStatusView
+            }
             Section("启动") {
                 Toggle("登录时自动启动", isOn: $settings.autoStart)
                 Text(statusText)
@@ -71,6 +83,56 @@ struct GeneralSettingsView: View {
         }
         .onChange(of: settings.autoStart) { _, _ in
             statusText = settings.autoStartStatusText()
+        }
+    }
+
+    @ViewBuilder
+    private var updateStatusView: some View {
+        switch state.updateManager.state {
+        case .idle:
+            EmptyView()
+        case .checking:
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("正在检查更新…")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        case .upToDate:
+            Text("已是最新版本")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        case .updateAvailable(let release):
+            VStack(alignment: .leading, spacing: 6) {
+                Label("发现新版本 v\(release.version)", systemImage: "arrow.down.circle")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                Button("下载并安装 v\(release.version)") {
+                    state.updateManager.downloadAndInstall(release)
+                }
+                .controlSize(.small)
+            }
+        case .downloading:
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("正在下载更新…")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        case .installing:
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("正在安装，完成后将自动重启…")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        case .failed(let message):
+            Label(message, systemImage: "exclamationmark.triangle.fill")
+                .font(.caption)
+                .foregroundStyle(.red)
         }
     }
 }

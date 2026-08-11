@@ -8,6 +8,9 @@ struct MenuBarMenuView: View {
             state.controller.toggle()
         }
         Divider()
+        Button("检查更新…") {
+            state.updateManager.checkForUpdates()
+        }
         SettingsLink {
             Text("偏好设置…")
         }

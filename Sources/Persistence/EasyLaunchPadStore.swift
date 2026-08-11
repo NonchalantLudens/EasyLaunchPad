@@ -21,6 +21,7 @@ enum EasyLaunchPadStore {
         static let iconSize = "iconSize"
         static let iconEntryAnimation = "iconEntryAnimation"
         static let showSystemApps = "showSystemApps"
+        static let autoCheckUpdates = "autoCheckUpdates"
     }
 
     static func loadHiddenApps() -> [HiddenAppRecord] {
@@ -110,5 +111,14 @@ enum EasyLaunchPadStore {
 
     static func saveShowSystemApps(_ enabled: Bool) {
         defaults.set(enabled, forKey: Key.showSystemApps)
+    }
+
+    static func loadAutoCheckUpdates() -> Bool {
+        if defaults.object(forKey: Key.autoCheckUpdates) == nil { return true }
+        return defaults.bool(forKey: Key.autoCheckUpdates)
+    }
+
+    static func saveAutoCheckUpdates(_ enabled: Bool) {
+        defaults.set(enabled, forKey: Key.autoCheckUpdates)
     }
 }
