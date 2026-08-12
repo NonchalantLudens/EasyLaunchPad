@@ -9,6 +9,7 @@ struct EasyLaunchPadApp: App {
         MenuBarExtra("EasyLaunchPad", systemImage: "square.grid.3x3") {
             MenuBarMenuView()
                 .environmentObject(state)
+                .environmentObject(state.updateManager)
         }
         .menuBarExtraStyle(.menu)
 
@@ -17,6 +18,7 @@ struct EasyLaunchPadApp: App {
                 .environmentObject(state)
                 .environmentObject(state.settings)
                 .environmentObject(state.catalog)
+                .environmentObject(state.updateManager)
         }
     }
 }

@@ -4,6 +4,7 @@ import SwiftUI
 struct GeneralSettingsView: View {
     @EnvironmentObject private var state: AppState
     @EnvironmentObject private var settings: EasyLaunchPadSettings
+    @EnvironmentObject private var updateManager: UpdateManager
     @State private var statusText = ""
 
     var body: some View {
@@ -49,12 +50,12 @@ struct GeneralSettingsView: View {
             Section("软件更新") {
                 Toggle("自动检查更新", isOn: $settings.autoCheckUpdates)
                 HStack {
-                    Text("当前版本 \(state.updateManager.currentVersion)")
+                    Text("当前版本 \(updateManager.currentVersion)")
                     Spacer()
-                    Button(state.updateManager.state == .checking ? "检查中…" : "检查更新") {
-                        state.updateManager.checkForUpdates()
+                    Button(updateManager.state == .checking ? "检查中…" : "检查更新") {
+                        updateManager.checkForUpdates()
                     }
-                    .disabled(state.updateManager.state == .checking)
+                    .disabled(updateManager.state == .checking)
                 }
                 updateStatusView
             }
@@ -88,7 +89,7 @@ struct GeneralSettingsView: View {
 
     @ViewBuilder
     private var updateStatusView: some View {
-        switch state.updateManager.state {
+        switch updateManager.state {
         case .idle:
             EmptyView()
         case .checking:
@@ -109,7 +110,7 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.orange)
                 Button("下载并安装 v\(release.version)") {
-                    state.updateManager.downloadAndInstall(release)
+                    updateManager.downloadAndInstall(release)
                 }
                 .controlSize(.small)
             }

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MenuBarMenuView: View {
     @EnvironmentObject private var state: AppState
+    @EnvironmentObject private var updateManager: UpdateManager
 
     var body: some View {
         Button(state.controller.isVisible ? "关闭 EasyLaunchPad" : "打开 EasyLaunchPad") {
@@ -9,7 +10,7 @@ struct MenuBarMenuView: View {
         }
         Divider()
         Button("检查更新…") {
-            state.updateManager.checkForUpdates()
+            updateManager.checkForUpdates()
         }
         SettingsLink {
             Text("偏好设置…")
