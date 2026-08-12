@@ -1,6 +1,6 @@
 cask "easylaunchpad" do
-  version "0.1.0"
-  sha256 "dadda00f8f5e93e9f040c62c88c26e8515bd2b2fc3413f47fdf4f18fbd99e84b"
+  version "2.0.0"
+  sha256 "b7485e23738ac325f2fbe328e6d4ac22067d2793b7996c7c76d11dbddc4776c9"
 
   url "https://github.com/NonchalantLudens/EasyLaunchPad/releases/download/v#{version}/EasyLaunchPad-#{version}.dmg"
   name "EasyLaunchPad"

@@ -25,7 +25,7 @@ struct AboutSettingsView: View {
                     NSWorkspace.shared.open(url)
                 }
             } label: {
-                Text("GitHub 仓库")
+                Text("GitHub 主页")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .underline()
