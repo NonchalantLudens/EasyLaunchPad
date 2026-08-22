@@ -114,13 +114,17 @@ struct GeneralSettingsView: View {
                 }
                 .controlSize(.small)
             }
-        case .downloading:
-            HStack(spacing: 8) {
-                ProgressView()
-                    .controlSize(.small)
-                Text("正在下载更新…")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        case .downloading(let release):
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("正在下载 v\(release.version)")
+                        .font(.caption)
+                    Spacer()
+                    Text("\(Int((updateManager.downloadProgress * 100).rounded()))%")
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                ProgressView(value: updateManager.downloadProgress)
             }
         case .installing:
             HStack(spacing: 8) {

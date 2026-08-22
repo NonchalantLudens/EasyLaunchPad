@@ -15,9 +15,16 @@ final class UpdateInstaller {
         return fileManager.isWritableFile(atPath: bundleURL.deletingLastPathComponent().path)
     }
 
-    /// 下载 DMG 并校验 SHA-256，返回临时文件路径。
-    func download(_ release: ReleaseInfo) async throws -> URL {
-        let (tempURL, response) = try await URLSession.shared.download(for: URLRequest(url: release.dmgURL))
+    /// 流式下载 DMG（实时进度回调），校验 SHA-256 后返回本地文件路径。
+    func download(_ release: ReleaseInfo, progressHandler: @escaping @Sendable (Double) -> Void) async throws -> URL {
+        let delegate = ProgressDownloadDelegate(progressHandler: progressHandler)
+        let session = URLSession(configuration: .ephemeral, delegate: delegate, delegateQueue: nil)
+        defer { session.finishTasksAndInvalidate() }
+
+        let (tempURL, response): (URL, URLResponse) = try await withCheckedThrowingContinuation { continuation in
+            delegate.continuation = continuation
+            session.downloadTask(with: URLRequest(url: release.dmgURL)).resume()
+        }
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
             throw UpdateError.network((response as? HTTPURLResponse)?.statusCode ?? -1)
         }
@@ -92,5 +99,43 @@ final class UpdateInstaller {
         task.arguments = ["detach", "-quiet", mountPoint.path]
         try? task.run()
         task.waitUntilExit()
+    }
+}
+
+/// URLSession 下载委托：转发实时进度，桥接 async/await 结果。
+private final class ProgressDownloadDelegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
+    let progressHandler: @Sendable (Double) -> Void
+    var continuation: CheckedContinuation<(URL, URLResponse), Error>?
+    private var downloadedURL: URL?
+
+    init(progressHandler: @escaping @Sendable (Double) -> Void) {
+        self.progressHandler = progressHandler
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        let destination = FileManager.default.temporaryDirectory
+            .appendingPathComponent("EasyLaunchPad-download-\(UUID().uuidString).dmg")
+        try? FileManager.default.removeItem(at: destination)
+        try? FileManager.default.moveItem(at: location, to: destination)
+        downloadedURL = destination
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
+                    didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+        guard totalBytesExpectedToWrite > 0 else { return }
+        progressHandler(Double(totalBytesWritten) / Double(totalBytesExpectedToWrite))
+    }
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: (any Error)?) {
+        if let error {
+            continuation?.resume(throwing: error)
+            continuation = nil
+        } else if let downloadedURL, let response = task.response {
+            continuation?.resume(returning: (downloadedURL, response))
+            continuation = nil
+        } else {
+            continuation?.resume(throwing: UpdateError.installFailed("下载未产生文件"))
+            continuation = nil
+        }
     }
 }

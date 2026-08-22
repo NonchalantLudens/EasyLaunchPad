@@ -16,6 +16,8 @@ final class UpdateManager: ObservableObject {
 
     @Published private(set) var state: State = .idle
     @Published private(set) var lastCheckedAt: Date?
+    /// 当前下载进度（0…1），仅 downloading 状态有效。
+    @Published private(set) var downloadProgress: Double = 0
 
     private let checker = UpdateChecker()
     private let installer = UpdateInstaller.shared
@@ -70,10 +72,16 @@ final class UpdateManager: ObservableObject {
             return
         }
         state = .downloading(release)
+        downloadProgress = 0
         Task { [weak self] in
             guard let self else { return }
             do {
-                let dmg = try await self.installer.download(release)
+                let dmg = try await self.installer.download(release) { [weak self] fraction in
+                    Task { @MainActor [weak self] in
+                        self?.downloadProgress = min(max(fraction, 0), 1)
+                    }
+                }
+                self.downloadProgress = 1
                 self.state = .installing(release)
                 try self.installer.install(from: dmg)
                 self.installer.relaunch()

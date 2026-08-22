@@ -2,6 +2,17 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.1.0] - 2026-08
+
+### Summary / 摘要
+
+Update experience overhaul: inline update status in the menu bar panel, real download progress bar, and retry on failure. / 更新体验全面改进：菜单栏面板内联更新状态、下载真实进度条、失败重试。
+
+### 新增 / Added
+
+- 菜单栏面板内联展示更新状态：检查中 / 已是最新 / 发现新版本（一键安装）/ 下载进度条 / 安装中 / 失败原因与重试，不再点击后无反馈 / Menu bar panel now shows update status inline: checking, up-to-date, new version with one-click install, download progress bar, installing, and failure reason with retry
+- 下载更新改为真实进度条：基于 URLSession 委托的实时字节进度（百分比 + 进度条），菜单面板与设置页同步显示 / Download now shows a real progress bar: live byte-level progress via URLSession delegate (percentage + bar), synced in both the menu panel and Settings
+
 ## [2.0.0] - 2026-08
 
 ### 变更

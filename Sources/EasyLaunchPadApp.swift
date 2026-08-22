@@ -11,7 +11,7 @@ struct EasyLaunchPadApp: App {
                 .environmentObject(state)
                 .environmentObject(state.updateManager)
         }
-        .menuBarExtraStyle(.menu)
+        .menuBarExtraStyle(.window)
 
         Settings {
             SettingsView()
