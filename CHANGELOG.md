@@ -2,6 +2,16 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.3.0] - 2026-08
+
+### Summary / 摘要
+
+Fixed the auto-update install step failing with "an item with the same name already exists" when a legacy backup folder exists in /Applications. / 修复 /Applications 存在历史备份目录时自更新安装报「同名条目已存在」的问题。
+
+### 修复 / Fixed
+
+- 自动更新安装：备份目录名唯一化（UUID 后缀），不再与历史遗留的固定名备份冲突；安装成功后尽力清理历史遗留备份 / Auto-update install: the backup folder name is now unique (UUID suffix), no longer colliding with legacy fixed-name backups; legacy backups are cleaned up best-effort after install
+
 ## [2.2.0] - 2026-08
 
 ### Summary / 摘要

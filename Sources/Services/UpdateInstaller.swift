@@ -68,18 +68,39 @@ final class UpdateInstaller {
         guard fileManager.fileExists(atPath: mountedApp.path) else { throw UpdateError.appNotFound }
         try fileManager.copyItem(at: mountedApp, to: staging)
 
-        // 安全替换：旧包改名备份 → 新包就位 → 删除备份；失败则回滚
-        let backup = target.deletingLastPathComponent().appendingPathComponent("EasyLaunchPad.app.old")
-        try? fileManager.removeItem(at: backup)
+        // 安全替换：唯一化备份名（避免与历史遗留目录冲突）→ 新包就位 → 清理；失败则回滚
+        let backup = target.deletingLastPathComponent()
+            .appendingPathComponent("EasyLaunchPad.app.old-\(UUID().uuidString)")
         try fileManager.moveItem(at: target, to: backup)
         do {
             try fileManager.moveItem(at: staging, to: target)
             try? fileManager.removeItem(at: backup)
+            cleanupLegacyBackups(at: target.deletingLastPathComponent())
         } catch {
+            try? fileManager.removeItem(at: backup)
             try? fileManager.moveItem(at: backup, to: target)
             throw UpdateError.installFailed(error.localizedDescription)
         }
         return true
+    }
+
+    /// 尽力清理历史版本的固定名备份目录（权限不足时静默跳过）。
+    private func cleanupLegacyBackups(at directory: URL) {
+        let legacyNames = [
+            "EasyLaunchPad.app.old",
+            "EasyLaunchPad.app.bak",
+        ]
+        for name in legacyNames {
+            try? fileManager.removeItem(at: directory.appendingPathComponent(name))
+        }
+        if let contents = try? fileManager.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: [.isDirectoryKey]
+        ) {
+            for url in contents where url.lastPathComponent.hasPrefix("EasyLaunchPad.app.bak-") {
+                try? fileManager.removeItem(at: url)
+            }
+        }
     }
 
     /// 退出当前进程并重新启动新版本。
