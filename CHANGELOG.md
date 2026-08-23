@@ -2,6 +2,21 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.2.0] - 2026-08
+
+### Summary / 摘要
+
+Reworked update UX: the menu panel stays clean, "Check for Updates" opens a dedicated update window with full status flow; menu items now have hover highlighting. / 重做更新交互：菜单面板保持简洁，「检查更新…」打开独立更新窗口展示完整状态流转；菜单项新增悬停高亮。
+
+### 新增 / Added
+
+- 独立更新窗口：点击「检查更新…」弹出「软件更新」界面，完整展示检查中 / 已是最新 / 发现新版本（安装按钮）/ 下载进度条 / 安装中 / 失败重试 / Dedicated update window: "Check for Updates…" opens a Software Update panel showing checking, up-to-date, new version with install, download progress bar, installing, and retry
+- 菜单栏面板项悬停高亮效果 / Hover highlighting for menu bar panel items
+
+### 修复 / Fixed
+
+- 版本状态不再内联在菜单面板中，避免覆盖「检查更新」入口 / Version status no longer inlined in the menu panel (it previously covered the check-for-updates entry)
+
 ## [2.1.0] - 2026-08
 
 ### Summary / 摘要
