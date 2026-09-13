@@ -18,6 +18,13 @@ struct EasyLaunchPadView: View {
     @State private var pinchAccum: CGFloat = 0
     @State private var swipeDelta: CGFloat = 0
     @State private var lastWheelSwitch = Date.distantPast
+    // 拖拽排序状态
+    @State private var reorderList: [AppItem]?
+    @State private var dragAppID: String?
+    @State private var dragOffset: CGSize = .zero
+    @State private var gridOrigin: CGPoint = .zero
+    @State private var pageFlipWork: DispatchWorkItem?
+    @State private var lastDragEnd = Date.distantPast
     @FocusState private var searchFocused: Bool
 
     private var filteredApps: [AppItem] {
@@ -56,6 +63,13 @@ struct EasyLaunchPadView: View {
                     size: settings.iconSize,
                     entered: appeared || !settings.iconEntryAnimation,
                     animationEnabled: settings.iconEntryAnimation,
+                    dragEnabled: searchText.trimmingCharacters(in: .whitespaces).isEmpty,
+                    dragAppID: dragAppID,
+                    dragOffset: dragOffset,
+                    onGridOrigin: { gridOrigin = $0 },
+                    onDragStart: handleDragStart,
+                    onDragMove: handleDragMove,
+                    onDragEnd: handleDragEnd,
                     onSelect: open,
                     onBadge: { pendingActionApp = $0 }
                 )
@@ -102,6 +116,11 @@ struct EasyLaunchPadView: View {
             controller.gestureHandler = nil
             jiggleTimer?.invalidate()
             jiggleTimer = nil
+            pageFlipWork?.cancel()
+            pageFlipWork = nil
+            dragAppID = nil
+            reorderList = nil
+            dragOffset = .zero
         }
         .onChange(of: controller.deleteMode) { _, enabled in
             jiggleTimer?.invalidate()
@@ -115,6 +134,8 @@ struct EasyLaunchPadView: View {
             }
         }
         .onReceive(catalog.$apps) { apps in
+            // 拖拽进行中不响应外部刷新，避免打断拖拽中的临时顺序
+            guard dragAppID == nil else { return }
             // @Published 在 willSet 发布：此时 catalog.apps 仍是旧值，
             // 必须用传入的新值重建页面；withAnimation 让其余图标滑动补位
             withAnimation(.easeInOut(duration: 0.25)) {
@@ -166,14 +187,15 @@ struct EasyLaunchPadView: View {
     }
 
     private func open(_ app: AppItem) {
-        // 延迟到下一次事件循环：先完成按钮按下/抬起，图标高亮瞬间恢复，
-        // 再激活目标应用，避免窗口失活导致高亮卡死
-        DispatchQueue.main.async {
-            if let url = app.url {
-                NSWorkspace.shared.open(url)
-            }
-            controller.hide()
-        }
+        // 拖拽刚结束的误触不触发启动
+        guard Date().timeIntervalSince(lastDragEnd) > 0.25 else { return }
+        // 先淡出窗口再异步启动应用：目标应用启动慢或弹出对话框时，
+        // 全屏遮罩立即消失，不会卡在屏幕上盖住其他窗口的提示
+        controller.hide()
+        guard let url = app.url else { return }
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        NSWorkspace.shared.open(url, configuration: configuration, completionHandler: nil)
     }
 
     private func openSelected() {
@@ -181,6 +203,92 @@ struct EasyLaunchPadView: View {
         let page = pages[selection.pageIndex]
         guard page.indices.contains(selection.itemIndex) else { return }
         open(page[selection.itemIndex])
+    }
+
+    // MARK: - 图标拖拽排序
+
+    private var gridGeometry: GridGeometry {
+        GridGeometry(
+            columns: controller.gridLayout.columns,
+            tileWidth: settings.iconSize.tileWidth,
+            tileHeight: settings.iconSize.tileHeight,
+            spacing: settings.iconSize.spacing,
+            origin: gridOrigin
+        )
+    }
+
+    private func handleDragStart(_ app: AppItem) {
+        // 搜索过滤时列表不是完整集合，禁用拖拽排序
+        guard searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let source = catalog.apps
+        guard source.contains(where: { $0.id == app.id }) else { return }
+        reorderList = source
+        dragAppID = app.id
+        dragOffset = .zero
+    }
+
+    private func handleDragMove(_ app: AppItem, at location: CGPoint) {
+        guard var list = reorderList, let dragID = dragAppID else { return }
+        schedulePageFlip(at: location)
+        let geo = gridGeometry
+        let perPage = max(1, controller.gridLayout.perPage)
+        guard let from = list.firstIndex(where: { $0.id == dragID }) else { return }
+        // 命中其他槽位则实时换位，其余图标滑动补位
+        if let slot = geo.slotIndex(at: location, maxSlots: list.count) {
+            let target = min(selection.pageIndex * perPage + slot, list.count - 1)
+            if target != from {
+                withAnimation(.easeInOut(duration: 0.16)) {
+                    let item = list.remove(at: from)
+                    list.insert(item, at: min(target, list.count))
+                    reorderList = list
+                    rebuildPages(apps: list)
+                }
+            }
+        }
+        // 拖拽中的图标跟随指针
+        guard let current = list.firstIndex(where: { $0.id == dragID }) else { return }
+        let center = geo.slotCenter(current % perPage)
+        dragOffset = CGSize(width: location.x - center.x, height: location.y - center.y)
+    }
+
+    private func handleDragEnd(_ app: AppItem, at location: CGPoint) {
+        pageFlipWork?.cancel()
+        pageFlipWork = nil
+        lastDragEnd = Date()
+        guard let list = reorderList, dragAppID != nil else {
+            dragAppID = nil
+            dragOffset = .zero
+            reorderList = nil
+            return
+        }
+        dragAppID = nil
+        dragOffset = .zero
+        reorderList = nil
+        // 落盘并发布新顺序；onReceive 会以动画重建页面
+        catalog.applyOrder(list.map(\.id))
+    }
+
+    /// 拖到屏幕左右边缘停留时自动翻页。
+    private func schedulePageFlip(at location: CGPoint) {
+        pageFlipWork?.cancel()
+        pageFlipWork = nil
+        let screenWidth = controller.currentScreen?.frame.width ?? 0
+        let direction: GridDirection?
+        if location.x < 60 {
+            direction = .left
+        } else if screenWidth > 0, location.x > screenWidth - 60 {
+            direction = .right
+        } else {
+            direction = nil
+        }
+        guard let direction else { return }
+        let work = DispatchWorkItem {
+            withAnimation(.easeInOut(duration: 0.18)) {
+                switchPage(direction)
+            }
+        }
+        pageFlipWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7, execute: work)
     }
 
     private func move(_ direction: GridDirection) {

@@ -1,5 +1,13 @@
 import SwiftUI
 
+/// 首个图块在页面坐标空间中的原点（拖拽命中测试用）。
+struct GridOriginKey: PreferenceKey {
+    static var defaultValue: CGPoint = .zero
+    static func reduce(value: inout CGPoint, nextValue: () -> CGPoint) {
+        value = nextValue()
+    }
+}
+
 struct GridPagesView: View {
     let pages: [[AppItem]]
     let selection: GridSelection
@@ -10,6 +18,14 @@ struct GridPagesView: View {
     let size: IconSizeLevel
     let entered: Bool
     let animationEnabled: Bool
+    // 拖拽排序
+    let dragEnabled: Bool
+    let dragAppID: String?
+    let dragOffset: CGSize
+    let onGridOrigin: (CGPoint) -> Void
+    let onDragStart: (AppItem) -> Void
+    let onDragMove: (AppItem, CGPoint) -> Void
+    let onDragEnd: (AppItem, CGPoint) -> Void
     let onSelect: (AppItem) -> Void
     let onBadge: (AppItem) -> Void
 
@@ -27,6 +43,13 @@ struct GridPagesView: View {
                         size: size,
                         entered: entered,
                         animationEnabled: animationEnabled,
+                        spaceName: "gridPage-\(index)",
+                        dragEnabled: dragEnabled,
+                        dragAppID: dragAppID,
+                        dragOffset: dragOffset,
+                        onDragStart: onDragStart,
+                        onDragMove: onDragMove,
+                        onDragEnd: onDragEnd,
                         selectedIndex: selection.pageIndex == index ? selection.itemIndex : nil,
                         onSelect: onSelect,
                         onBadge: onBadge
@@ -38,6 +61,7 @@ struct GridPagesView: View {
             .offset(x: -CGFloat(selection.pageIndex) * geo.size.width)
             .animation(.easeInOut(duration: 0.18), value: selection.pageIndex)
         }
+        .onPreferenceChange(GridOriginKey.self) { onGridOrigin($0) }
     }
 }
 
@@ -51,6 +75,13 @@ struct GridPageView: View {
     let size: IconSizeLevel
     let entered: Bool
     let animationEnabled: Bool
+    let spaceName: String
+    let dragEnabled: Bool
+    let dragAppID: String?
+    let dragOffset: CGSize
+    let onDragStart: (AppItem) -> Void
+    let onDragMove: (AppItem, CGPoint) -> Void
+    let onDragEnd: (AppItem, CGPoint) -> Void
     let selectedIndex: Int?
     let onSelect: (AppItem) -> Void
     let onBadge: (AppItem) -> Void
@@ -74,9 +105,17 @@ struct GridPageView: View {
                     revealDelay: Double(index / columns) * 0.025,
                     animationEnabled: animationEnabled,
                     action: { onSelect(app) },
-                    onBadge: { onBadge(app) }
+                    onBadge: { onBadge(app) },
+                    dragSpaceName: dragEnabled ? spaceName : nil,
+                    isDragged: dragAppID == app.id,
+                    dragOffset: dragAppID == app.id ? dragOffset : .zero,
+                    reportsGridOrigin: index == 0,
+                    onDragStarted: dragEnabled ? { onDragStart(app) } : nil,
+                    onDragMoved: dragEnabled ? { onDragMove(app, $0) } : nil,
+                    onDragEnded: dragEnabled ? { onDragEnd(app, $0) } : nil
                 )
             }
         }
+        .coordinateSpace(name: spaceName)
     }
 }

@@ -20,17 +20,6 @@ struct AboutSettingsView: View {
             Text("版本 \(version) (\(build))")
                 .font(.callout)
                 .foregroundStyle(.secondary)
-            Button {
-                if let url = URL(string: "https://github.com/NonchalantLudens/EasyLaunchPad") {
-                    NSWorkspace.shared.open(url)
-                }
-            } label: {
-                Text("GitHub 主页")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .underline()
-            }
-            .buttonStyle(.plain)
             Text("© 2026 NonchalantLudens")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)

@@ -146,3 +146,43 @@ final class GridNavigationTests: XCTestCase {
         XCTAssertEqual(GridNavigation.page(99, pageCounts: pageCounts), GridSelection(pageIndex: 2, itemIndex: 0))
     }
 }
+
+final class GridGeometryTests: XCTestCase {
+    // origin(20,10)，图块 100x150，间距 32，4 列
+    private let geo = GridGeometry(
+        columns: 4,
+        tileWidth: 100,
+        tileHeight: 150,
+        spacing: 32,
+        origin: CGPoint(x: 20, y: 10)
+    )
+
+    func testSlotCenterFirstItem() {
+        XCTAssertEqual(geo.slotCenter(0), CGPoint(x: 70, y: 85))
+    }
+
+    func testSlotCenterSecondRowSecondColumn() {
+        // index 5 → col 1, row 1
+        let center = geo.slotCenter(5)
+        XCTAssertEqual(center.x, 20 + 132 + 50, accuracy: 0.001)
+        XCTAssertEqual(center.y, 10 + 182 + 75, accuracy: 0.001)
+    }
+
+    func testSlotIndexRoundTrip() {
+        let center = geo.slotCenter(5)
+        XCTAssertEqual(geo.slotIndex(at: center, maxSlots: 12), 5)
+    }
+
+    func testSlotIndexClampsBeyondLastItem() {
+        // 远超网格范围的点收敛到最后一个合法槽位
+        XCTAssertEqual(geo.slotIndex(at: CGPoint(x: 1000, y: 900), maxSlots: 8), 7)
+    }
+
+    func testSlotIndexClampsNegativeToZero() {
+        XCTAssertEqual(geo.slotIndex(at: CGPoint(x: -50, y: -50), maxSlots: 8), 0)
+    }
+
+    func testSlotIndexNilForEmptyGrid() {
+        XCTAssertNil(geo.slotIndex(at: .zero, maxSlots: 0))
+    }
+}

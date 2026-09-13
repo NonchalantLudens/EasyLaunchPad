@@ -22,6 +22,15 @@ enum EasyLaunchPadStore {
         static let iconEntryAnimation = "iconEntryAnimation"
         static let showSystemApps = "showSystemApps"
         static let autoCheckUpdates = "autoCheckUpdates"
+        static let appOrder = "appOrder"
+    }
+
+    static func loadAppOrder() -> [String] {
+        defaults.stringArray(forKey: Key.appOrder) ?? []
+    }
+
+    static func saveAppOrder(_ ids: [String]) {
+        defaults.set(ids, forKey: Key.appOrder)
     }
 
     static func loadHiddenApps() -> [HiddenAppRecord] {

@@ -29,6 +29,40 @@ struct GridLayout: Equatable {
     }
 }
 
+/// 网格几何计算：图标拖拽换位时的命中测试与拖拽偏移。
+/// 坐标均基于单个页面自身的坐标空间（各页布局一致）。
+struct GridGeometry: Equatable {
+    let columns: Int
+    let tileWidth: CGFloat
+    let tileHeight: CGFloat
+    let spacing: CGFloat
+    /// 网格内容首格原点（页面坐标空间内）。
+    let origin: CGPoint
+
+    var cellWidth: CGFloat { tileWidth + spacing }
+    var cellHeight: CGFloat { tileHeight + spacing }
+
+    /// 页内槽位索引 → 槽位中心点。
+    func slotCenter(_ index: Int) -> CGPoint {
+        let cols = max(1, columns)
+        let col = index % cols
+        let row = index / cols
+        return CGPoint(
+            x: origin.x + CGFloat(col) * cellWidth + tileWidth / 2,
+            y: origin.y + CGFloat(row) * cellHeight + tileHeight / 2
+        )
+    }
+
+    /// 命中测试：页面坐标 → 页内槽位索引；越界收敛到 `[0, maxSlots)`。
+    func slotIndex(at point: CGPoint, maxSlots: Int) -> Int? {
+        guard columns > 0, maxSlots > 0 else { return nil }
+        let rel = CGPoint(x: point.x - origin.x, y: point.y - origin.y)
+        let col = min(max(0, Int((rel.x + spacing / 2) / cellWidth)), columns - 1)
+        let row = max(0, Int((rel.y + spacing / 2) / cellHeight))
+        return min(row * columns + col, maxSlots - 1)
+    }
+}
+
 enum GridDirection {
     case left, right, up, down
 }

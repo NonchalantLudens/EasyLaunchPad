@@ -8,6 +8,8 @@ final class AppCatalog: ObservableObject {
 
     private var manualURLs: [URL] = []
     private var trashedIDs: Set<String> = []
+    /// 用户拖拽排序后的应用 ID 顺序；未记录的应用按名称排序追加在末尾。
+    private var orderIDs: [String] = []
     private let selfBundleID = Bundle.main.bundleIdentifier ?? ""
     private var refreshScheduled = false
     private var directoryMonitors: [DispatchSourceFileSystemObject] = []
@@ -19,6 +21,7 @@ final class AppCatalog: ObservableObject {
     init() {
         hiddenRecords = EasyLaunchPadStore.loadHiddenApps()
         manualURLs = EasyLaunchPadStore.loadManualURLs()
+        orderIDs = EasyLaunchPadStore.loadAppOrder()
     }
 
     /// 合并同一事件循环内的多次刷新，目录扫描在后台执行，
@@ -78,9 +81,10 @@ final class AppCatalog: ObservableObject {
                 includeSystemApps: includeSystem
             )
         }.value
+        let ordered = Self.applyingOrder(newApps, orderIDs: orderIDs)
         // 内容未变化时不发布，避免无谓动画
-        if apps != newApps {
-            apps = newApps
+        if apps != ordered {
+            apps = ordered
         }
     }
 
@@ -109,6 +113,36 @@ final class AppCatalog: ObservableObject {
     }
 
     // MARK: - App management
+
+    /// 拖拽排序落盘：保存顺序并立即应用到当前列表。
+    func applyOrder(_ ids: [String]) {
+        orderIDs = ids
+        EasyLaunchPadStore.saveAppOrder(ids)
+        let ordered = Self.applyingOrder(apps, orderIDs: ids)
+        if apps != ordered {
+            apps = ordered
+        }
+    }
+
+    /// 按保存的顺序排列应用；顺序中已失效的 ID 忽略，
+    /// 未记录的应用（新安装）保持原相对顺序追加在末尾。
+    nonisolated static func applyingOrder(_ apps: [AppItem], orderIDs: [String]) -> [AppItem] {
+        guard !orderIDs.isEmpty, apps.count > 1 else { return apps }
+        let byID = Dictionary(apps.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var seen = Set<String>()
+        var result: [AppItem] = []
+        result.reserveCapacity(apps.count)
+        for id in orderIDs where !seen.contains(id) {
+            if let app = byID[id] {
+                result.append(app)
+                seen.insert(id)
+            }
+        }
+        for app in apps where !seen.contains(app.id) {
+            result.append(app)
+        }
+        return result
+    }
 
     func hide(_ app: AppItem) {
         guard !hiddenRecords.contains(where: { $0.id == app.id }) else { return }

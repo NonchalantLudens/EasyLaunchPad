@@ -24,10 +24,20 @@ struct IconTileView: View {
     let action: () -> Void
     let onBadge: () -> Void
 
+    // 拖拽排序（未启用时回调为 nil，不参与布局）
+    var dragSpaceName: String? = nil
+    var isDragged: Bool = false
+    var dragOffset: CGSize = .zero
+    var reportsGridOrigin: Bool = false
+    var onDragStarted: (() -> Void)? = nil
+    var onDragMoved: ((CGPoint) -> Void)? = nil
+    var onDragEnded: ((CGPoint) -> Void)? = nil
+
     @State private var icon: NSImage?
     @State private var cachedName: String?
     @State private var cachedHighlight: String?
     @State private var cachedAttributed: AttributedString?
+    @State private var dragging = false
 
     private var attributedName: AttributedString {
         if let cachedAttributed, cachedName == app.name, cachedHighlight == highlight {
@@ -82,11 +92,15 @@ struct IconTileView: View {
                 }
             }
         }
+        .background { gridOriginReader }
         .rotationEffect(.degrees(jiggle))
         .offset(x: jiggle * 0.55)
+        .offset(dragOffset)
         .opacity(entered ? 1 : 0)
         .offset(y: entered ? 0 : 40)
         .scaleEffect(entered ? 1 : 0.85)
+        .scaleEffect(isDragged ? 1.08 : 1)
+        .zIndex(isDragged ? 1 : 0)
         .animation(
             animationEnabled
                 ? .spring(response: 0.28, dampingFraction: 0.8).delay(revealDelay)
@@ -94,9 +108,41 @@ struct IconTileView: View {
             value: entered
         )
         .transition(.scale(scale: 0.6).combined(with: .opacity))
+        .simultaneousGesture(dragGesture)
         .task(id: app.id) {
             icon = await IconStore.shared.icon(for: app.url)
         }
+    }
+
+    /// 首个图块上报自身在页面坐标空间中的原点，供命中测试定位网格。
+    @ViewBuilder
+    private var gridOriginReader: some View {
+        if reportsGridOrigin, let name = dragSpaceName {
+            GeometryReader { geo in
+                Color.clear.preference(
+                    key: GridOriginKey.self,
+                    value: geo.frame(in: .named(name)).origin
+                )
+            }
+        }
+    }
+
+    private var dragGesture: some Gesture {
+        DragGesture(minimumDistance: 8, coordinateSpace: .named(dragSpaceName ?? "gridPage"))
+            .onChanged { value in
+                guard onDragStarted != nil else { return }
+                if dragging {
+                    onDragMoved?(value.location)
+                } else {
+                    dragging = true
+                    onDragStarted?()
+                }
+            }
+            .onEnded { value in
+                guard dragging else { return }
+                dragging = false
+                onDragEnded?(value.location)
+            }
     }
 
     @ViewBuilder
