@@ -74,11 +74,9 @@ struct MenuBarMenuView: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
-    /// 打开设置窗口：先激活应用再走 showSettingsWindow 动作。
-    /// 不用 SettingsLink——面板处于非激活状态时它经常无响应。
+    /// 打开设置窗口：AppKit 自持窗口，不依赖应用激活状态。
     private func openSettings() {
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        SettingsWindowController.shared.show(state: state)
     }
 }
 

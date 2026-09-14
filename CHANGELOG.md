@@ -2,6 +2,16 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.4.1] - 2026-09
+
+### Summary / 摘要
+
+Fixed the Settings window failing to open from the menu bar panel when the app was inactive. / 修复应用未激活时菜单面板中的「偏好设置」无法打开设置窗口的问题。
+
+### 修复 / Fixed
+
+- 设置窗口改由 AppKit 直接持有（与启动器窗口同模式），`orderFrontRegardless` 兜底置前，不再依赖应用激活状态；已通过合成点击端到端验证 / Settings window is now owned by AppKit (same pattern as the launcher window) with `orderFrontRegardless` fallback; verified end-to-end via synthesized clicks
+
 ## [2.4.0] - 2026-09
 
 ### Summary / 摘要
