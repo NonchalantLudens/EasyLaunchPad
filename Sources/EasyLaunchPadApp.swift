@@ -6,13 +6,6 @@ struct EasyLaunchPadApp: App {
     private let state = AppState.shared
 
     var body: some Scene {
-        MenuBarExtra("EasyLaunchPad", systemImage: "square.grid.3x3") {
-            MenuBarMenuView()
-                .environmentObject(state)
-                .environmentObject(state.updateManager)
-        }
-        .menuBarExtraStyle(.window)
-
         Settings {
             SettingsView()
                 .environmentObject(state)
