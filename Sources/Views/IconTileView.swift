@@ -27,9 +27,8 @@ struct IconTileView: View {
     // 拖拽排序（未启用时回调为 nil，不参与布局）
     var dragSpaceName: String? = nil
     var isDragged: Bool = false
-    var dragOffset: CGSize = .zero
     var reportsGridOrigin: Bool = false
-    var onDragStarted: (() -> Void)? = nil
+    var onDragStarted: ((CGPoint) -> Void)? = nil
     var onDragMoved: ((CGPoint) -> Void)? = nil
     var onDragEnded: ((CGPoint) -> Void)? = nil
 
@@ -95,11 +94,10 @@ struct IconTileView: View {
         .background { gridOriginReader }
         .rotationEffect(.degrees(jiggle))
         .offset(x: jiggle * 0.55)
-        .offset(dragOffset)
-        .opacity(entered ? 1 : 0)
+        // 拖动中的图块隐形：视觉由悬浮图标负责，网格只保留空位
+        .opacity(isDragged ? 0 : (entered ? 1 : 0))
         .offset(y: entered ? 0 : 40)
         .scaleEffect(entered ? 1 : 0.85)
-        .scaleEffect(isDragged ? 1.08 : 1)
         .zIndex(isDragged ? 1 : 0)
         .animation(
             animationEnabled
@@ -114,14 +112,17 @@ struct IconTileView: View {
         }
     }
 
-    /// 首个图块上报自身在页面坐标空间中的原点，供命中测试定位网格。
+    /// 首个图块上报自身原点：页面坐标空间（命中测试）与根坐标空间（悬浮图标定位）。
     @ViewBuilder
     private var gridOriginReader: some View {
         if reportsGridOrigin, let name = dragSpaceName {
             GeometryReader { geo in
                 Color.clear.preference(
-                    key: GridOriginKey.self,
-                    value: geo.frame(in: .named(name)).origin
+                    key: GridOriginInfoKey.self,
+                    value: GridOriginInfo(
+                        page: geo.frame(in: .named(name)).origin,
+                        root: geo.frame(in: .named("gridRoot")).origin
+                    )
                 )
             }
         }
@@ -135,7 +136,7 @@ struct IconTileView: View {
                     onDragMoved?(value.location)
                 } else {
                     dragging = true
-                    onDragStarted?()
+                    onDragStarted?(value.location)
                 }
             }
             .onEnded { value in
