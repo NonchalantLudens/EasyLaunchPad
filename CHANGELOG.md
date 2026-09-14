@@ -2,6 +2,29 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.4.0] - 2026-09
+
+### Summary / 摘要
+
+Icons can now be dragged to rearrange (with page-flip at screen edges, order persisted); fixed the launch overlay freezing on top of dialogs; reworked the menu bar panel interaction; About page simplified. / 图标支持拖拽排序（边缘翻页、顺序持久化）；修复启动遮罩卡住盖住弹窗的问题；重构菜单栏面板交互；简化关于页。
+
+### 新增 / Added
+
+- 图标拖拽排序：拖动图标换位，其余图标滑动补位；拖到屏幕左右边缘停留自动翻页，可跨页移动；顺序持久化，重启保留 / Drag to rearrange icons with slide-aside animation, page auto-flip at screen edges, cross-page moves, and persisted order
+- 新增 GridGeometry 网格几何计算与应用排序逻辑，配套单元测试 / New GridGeometry hit-testing and app ordering logic with unit tests
+
+### 修复 / Fixed
+
+- 点击应用后不再卡住：先淡出窗口再异步启动应用，目标应用启动慢或弹出对话框时不再被全屏遮罩盖住 / Launching an app no longer freezes the overlay: the window fades out first and the app is opened asynchronously, so slow launches or dialogs are no longer covered
+- 菜单栏面板重构：改用 NSStatusItem + 非激活面板，点击外部自动收起，条目点击后自动收起 / Menu bar panel reworked with NSStatusItem + non-activating panel; auto-dismisses on outside click and after item actions
+- 「偏好设置」经常无响应已修复（先激活应用再打开设置窗口）/ Preferences now opens reliably (activates the app first)
+- 「检查更新」在菜单面板内原地展示状态（检查/结果/下载进度/安装/失败重试），不再弹出独立窗口 / "Check for Updates" now shows its status inline in the panel instead of opening a separate window
+- 菜单条目样式统一（悬停高亮一致）/ Menu item styles unified with consistent hover highlighting
+
+### 变更 / Changed
+
+- 关于页移除 GitHub 链接 / About page: removed the GitHub link
+
 ## [2.3.0] - 2026-08
 
 ### Summary / 摘要
