@@ -1,39 +1,19 @@
 import AppKit
 import SwiftUI
 
-/// 菜单栏面板中的行按钮：悬停高亮（模拟原生菜单项）。
-/// 面板所有条目统一使用本组件，保证样式一致。
-struct MenuPanelButton: View {
-    let title: String
-    let action: () -> Void
-
-    @State private var isHovered = false
-
-    var body: some View {
-        Text(title)
-            .font(.body)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(
-                RoundedRectangle(cornerRadius: 5)
-                    .fill(isHovered ? Color.accentColor : Color.clear)
-            )
-            .contentShape(Rectangle())
-            .onHover { isHovered = $0 }
-            .onTapGesture(perform: action)
-    }
-}
-
 /// 菜单栏图标下拉面板。
 /// 交互约定：
 /// - 普通条目点击后先收起面板再执行动作
-/// - 「检查更新」例外：保留面板，原地展示检查 / 结果 / 下载 / 安装状态
+/// - 「检查更新」例外：保留面板，状态在行内展示；
+///   信息性结果（已是最新 / 失败）短暂显示后自动复原，不常驻
 struct MenuBarMenuView: View {
     @EnvironmentObject private var state: AppState
     @EnvironmentObject private var controller: EasyLaunchPadController
     @EnvironmentObject private var updateManager: UpdateManager
     @EnvironmentObject private var statusBar: StatusBarPanelController
+
+    /// 信息性状态展示时长，之后自动复原为空闲。
+    private let transientStatusLifetime: UInt64 = 4_000_000_000
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -44,14 +24,8 @@ struct MenuBarMenuView: View {
 
             Divider()
 
-            MenuPanelButton(title: "检查更新…") {
-                updateManager.checkForUpdates()
-            }
-            if updateManager.state != .idle {
-                MenuUpdateStatusView()
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 4)
-            }
+            checkUpdateRow
+
             MenuPanelButton(title: "偏好设置…") {
                 statusBar.hide()
                 openSettings()
@@ -78,75 +52,68 @@ struct MenuBarMenuView: View {
     private func openSettings() {
         SettingsWindowController.shared.show(state: state)
     }
-}
 
-/// 面板内联的更新状态：检查中 / 最新 / 新版本 / 下载进度 / 安装 / 失败重试。
-struct MenuUpdateStatusView: View {
-    @EnvironmentObject private var updateManager: UpdateManager
+    // MARK: - 检查更新（行内状态）
 
-    var body: some View {
+    @ViewBuilder
+    private var checkUpdateRow: some View {
         switch updateManager.state {
         case .idle:
-            EmptyView()
+            MenuPanelButton(title: "检查更新…") {
+                updateManager.checkForUpdates()
+            }
 
         case .checking:
-            HStack(spacing: 8) {
+            MenuPanelButton(title: "检查更新…", action: {}, trailing: {
                 ProgressView()
                     .controlSize(.small)
-                Text("正在检查更新…")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
+            })
 
         case .upToDate:
-            Label("已是最新版本", systemImage: "checkmark.circle.fill")
-                .font(.callout)
-                .foregroundStyle(.green)
-
-        case .updateAvailable(let release):
-            VStack(alignment: .leading, spacing: 6) {
-                Label("发现新版本 v\(release.version)", systemImage: "arrow.down.circle")
-                    .font(.callout)
-                    .foregroundStyle(.orange)
-                Button("下载并安装 v\(release.version)") {
-                    updateManager.downloadAndInstall(release)
-                }
-                .controlSize(.small)
+            MenuPanelButton(title: "检查更新…", action: {}, trailing: {
+                Text("已是最新")
+                    .font(.caption)
+                    .foregroundStyle(.green)
+            })
+            .task(id: updateManager.state) {
+                try? await Task.sleep(nanoseconds: transientStatusLifetime)
+                updateManager.clearTransientStatus()
             }
 
+        case .failed:
+            MenuPanelButton(title: "检查更新…", action: {}, trailing: {
+                Text("失败，点击重试")
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            })
+            .task(id: updateManager.state) {
+                try? await Task.sleep(nanoseconds: transientStatusLifetime)
+                updateManager.clearTransientStatus()
+            }
+
+        case .updateAvailable(let release):
+            MenuPanelButton(
+                title: "下载并安装 v\(release.version)",
+                titleColor: .orange,
+                action: { updateManager.downloadAndInstall(release) }
+            )
+
         case .downloading(let release):
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("正在下载 v\(release.version)")
-                        .font(.callout)
-                    Spacer()
+            MenuPanelButton(
+                title: "下载中 v\(release.version)",
+                action: {},
+                trailing: {
                     Text("\(Int((updateManager.downloadProgress * 100).rounded()))%")
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
-                ProgressView(value: updateManager.downloadProgress)
-            }
+            )
 
         case .installing:
-            HStack(spacing: 8) {
+            MenuPanelButton(title: "正在安装，将自动重启", action: {}, trailing: {
                 ProgressView()
                     .controlSize(.small)
-                Text("正在安装，完成后将自动重启…")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
-
-        case .failed(let message):
-            VStack(alignment: .leading, spacing: 6) {
-                Label(message, systemImage: "exclamationmark.triangle.fill")
-                    .font(.callout)
-                    .foregroundStyle(.red)
-                    .lineLimit(3)
-                Button("重试") {
-                    updateManager.checkForUpdates()
-                }
-                .controlSize(.small)
-            }
+            })
         }
     }
 }

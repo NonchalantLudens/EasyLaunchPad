@@ -112,6 +112,10 @@ struct IconTileView: View {
             value: entered
         )
         .transition(.scale(scale: 0.6).combined(with: .opacity))
+        // 拖动中的图块排除一切动画：布局瞬时到位，跟随偏移保证指针贴合
+        .transaction { transaction in
+            if isDragged { transaction.animation = nil }
+        }
         .simultaneousGesture(dragGesture)
         .onChange(of: slotCenterPage) { _, newCenter in
             // 换位后布局位置变化，用当前指针位置重算偏移，抓取点保持不动

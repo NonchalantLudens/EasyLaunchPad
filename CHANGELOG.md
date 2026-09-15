@@ -2,6 +2,18 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.5.0] - 2026-09
+
+### Summary / 摘要
+
+Displaced icons now slide with transition animation during drag; page dots are clickable to jump to a page; menu bar update status shows inline in the check-for-updates row and auto-reverts after informational results. / 拖动时被挤占的图标新增滑动过渡动画；底部分页圆点支持点击跳页；菜单栏更新状态改为行内展示且信息性结果自动复原。
+
+### 新增 / Added
+
+- 点击底部分页圆点直接跳转到对应分页 / Click a page dot to jump to that page
+- 拖动图标时被挤占的图标以滑动过渡动画补位（被拖图标仍即时贴合指针） / Displaced icons slide into place during drag while the dragged icon stays glued to the pointer
+- 菜单栏「检查更新」状态行内展示：检查中转圈、已是最新 / 失败短暂显示后自动复原；发现新版本时该行变为「下载并安装 vX」，下载进度百分比行内显示，不再占用独立行 / Menu bar update status is inline in the check row and auto-reverts after informational results; when an update is available the row becomes the install action
+
 ## [2.4.2] - 2026-09
 
 ### Summary / 摘要

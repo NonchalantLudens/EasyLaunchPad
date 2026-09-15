@@ -66,6 +66,16 @@ final class UpdateManager: ObservableObject {
         }
     }
 
+    /// 清除信息性状态（已是最新 / 检查失败），回到空闲。
+    /// 更新可用 / 下载中 / 安装中是待办状态，不由本方法清除。
+    func clearTransientStatus() {
+        if state == .upToDate {
+            state = .idle
+        } else if case .failed = state {
+            state = .idle
+        }
+    }
+
     func downloadAndInstall(_ release: ReleaseInfo) {
         guard installer.isUpdatable else {
             state = .failed("应用需安装在 /Applications 等可写位置才能自动更新")

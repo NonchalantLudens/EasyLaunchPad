@@ -78,7 +78,12 @@ struct EasyLaunchPadView: View {
                 if searchText.trimmingCharacters(in: .whitespaces).isEmpty, pages.count > 1 {
                     PageDotsView(
                         pageCount: pages.count,
-                        currentPage: selection.pageIndex
+                        currentPage: selection.pageIndex,
+                        onSelect: { index in
+                            withAnimation(.easeInOut(duration: 0.18)) {
+                                selection = GridNavigation.page(index, pageCounts: pages.map(\.count))
+                            }
+                        }
                     )
                     .padding(.bottom, 18)
                 }
@@ -223,16 +228,18 @@ struct EasyLaunchPadView: View {
         let geo = gridGeometry
         let perPage = max(1, controller.gridLayout.perPage)
         guard let from = list.firstIndex(where: { $0.id == dragID }) else { return }
-        // 命中其他槽位则换位。必须瞬时完成（无动画）：
-        // 被拖图块的位置 = 槽位中心 + 跟随偏移，布局与偏移同帧更新，
-        // 指针与图标才不会错位；跟随偏移由图块局部状态自管
+        // 命中其他槽位则换位：其余图块动画滑动补位；
+        // 被拖图块通过 .transaction 排除动画，布局瞬时到位，
+        // 加上跟随偏移后指针与图标始终贴合
         if let slot = geo.slotIndex(at: location, maxSlots: list.count) {
             let target = min(selection.pageIndex * perPage + slot, list.count - 1)
             if target != from {
-                let item = list.remove(at: from)
-                list.insert(item, at: min(target, list.count))
-                reorderList = list
-                rebuildPages(apps: list)
+                withAnimation(.easeInOut(duration: 0.18)) {
+                    let item = list.remove(at: from)
+                    list.insert(item, at: min(target, list.count))
+                    reorderList = list
+                    rebuildPages(apps: list)
+                }
             }
         }
     }
