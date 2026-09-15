@@ -16,6 +16,7 @@ final class StatusBarPanelController: NSObject, ObservableObject {
     private var statusItem: NSStatusItem?
     private var panel: NSPanel?
     private var outsideClickMonitor: Any?
+    private var statusClickMonitor: Any?
 
     /// 应用启动时安装状态项；content 为面板的 SwiftUI 根视图。
     func install(content: NSView) {
@@ -25,9 +26,18 @@ final class StatusBarPanelController: NSObject, ObservableObject {
             systemSymbolName: "square.grid.3x3",
             accessibilityDescription: "EasyLaunchPad"
         )
-        item.button?.target = self
-        item.button?.action = #selector(statusButtonClicked)
         statusItem = item
+        // 不用按钮的 target/action：其按下/抬起触发时机不可控（一次点击可能
+        // 触发两次导致"关了又弹"）。改为本地事件监视器精确判定点击落点，
+        // 每次点击恰好切换一次
+        statusClickMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+            guard let self,
+                  let button = self.statusItem?.button,
+                  let buttonWindow = button.window,
+                  event.window === buttonWindow else { return event }
+            self.togglePanel()
+            return nil
+        }
 
         let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 244, height: 120),
@@ -46,7 +56,7 @@ final class StatusBarPanelController: NSObject, ObservableObject {
         self.panel = panel
     }
 
-    @objc private func statusButtonClicked() {
+    private func togglePanel() {
         let now = CFAbsoluteTimeGetCurrent()
         guard now - lastToggleAt > 0.2 else { return }
         lastToggleAt = now

@@ -2,6 +2,21 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.5.3] - 2026-09
+
+### Summary / 摘要
+
+Menu bar panel toggle is now event-precise; icon press feedback restored to the classic Launchpad look; background blur now truly scales with the transparency slider (100% = crisp desktop). / 菜单栏面板开关改为事件级精确切换；图标按压反馈还原经典 Launchpad 样式；背景模糊强度真正随透明度变化（100% = 桌面原样清晰透出）。
+
+### 修复 / Fixed
+
+- 菜单栏图标点击切换改用本地鼠标事件监视器精确判定落点（按钮的按下/抬起可能各触发一次 action，导致第二次点击"关了又弹"） / Menu bar toggle now uses a precise local mouse-event monitor instead of the button action (whose down/up timing could double-fire)
+- 按压反馈不再整块变灰：图标本体按下缩小变暗、抬起恢复（经典 Launchpad 样式），移除闪光覆盖层 / Press feedback no longer greys out the whole tile: the icon itself shrinks and dims while pressed (classic Launchpad style)
+
+### 变更 / Changed
+
+- 背景模糊强度与透明度真正对应：改用 NSVisualEffectView（behindWindow），100% 透明时零模糊、桌面原样清晰透出；压暗遮罩同步减淡 / Background blur now truly maps to the transparency slider via NSVisualEffectView: 100% transparency shows the crisp desktop with no blur; the dim overlay fades proportionally
+
 ## [2.5.2] - 2026-09
 
 ### Summary / 摘要

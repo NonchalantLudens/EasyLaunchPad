@@ -1,12 +1,24 @@
 import AppKit
 import SwiftUI
 
-/// 图标按钮按下反馈：按下瞬间变暗缩小，抬起即恢复。
+/// 图块按压状态的环境传递：按压效果只作用于图标本体（经典 Launchpad 样式）。
+private struct TilePressedKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var tilePressed: Bool {
+        get { self[TilePressedKey.self] }
+        set { self[TilePressedKey.self] = newValue }
+    }
+}
+
+/// 图标按钮按下反馈：图标本体缩小变暗，抬起即恢复。
 struct IconPressStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .opacity(configuration.isPressed ? 0.7 : 1)
-            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .environment(\.tilePressed, configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
@@ -27,7 +39,6 @@ struct IconTileView: View {
     // 拖拽排序（未启用时回调为 nil，不参与布局）
     var dragSpaceName: String? = nil
     var isDragged: Bool = false
-    var isFlashing: Bool = false
     var reportsGridOrigin: Bool = false
     /// 图块中心在页面坐标空间中的位置（换位后由父视图更新）。
     var slotCenterPage: CGPoint = .zero
@@ -99,15 +110,6 @@ struct IconTileView: View {
             }
         }
         .background { gridOriginReader }
-        .overlay {
-            // 点击命中的闪光反馈
-            if isFlashing {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(.white.opacity(0.35))
-                    .transition(.opacity)
-            }
-        }
-        .animation(.easeIn(duration: 0.08), value: isFlashing)
         .rotationEffect(.degrees(jiggle))
         .offset(x: jiggle * 0.55)
         .offset(followOffset)
@@ -182,12 +184,17 @@ struct IconTileView: View {
             }
     }
 
+    @Environment(\.tilePressed) private var tilePressed
+
     @ViewBuilder
     private var iconView: some View {
         if let icon {
             Image(nsImage: icon)
                 .resizable()
                 .frame(width: size.iconPoint, height: size.iconPoint)
+                .scaleEffect(tilePressed ? 0.88 : 1)
+                .opacity(tilePressed ? 0.55 : 1)
+                .animation(.easeOut(duration: 0.12), value: tilePressed)
                 .shadow(color: .black.opacity(0.25), radius: 3, y: 2)
         } else {
             RoundedRectangle(cornerRadius: size.iconCornerRadius - 4, style: .continuous)

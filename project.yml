@@ -19,8 +19,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.easylaunchpad.app
-        MARKETING_VERSION: 2.5.2
-        CURRENT_PROJECT_VERSION: 11
+        MARKETING_VERSION: 2.5.3
+        CURRENT_PROJECT_VERSION: 12
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     info:

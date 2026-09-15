@@ -13,8 +13,6 @@ struct EasyLaunchPadView: View {
     @State private var pages: [[AppItem]] = []
     @State private var searchText = ""
     @State private var pendingActionApp: AppItem?
-    @State private var flashAppID: String?
-    @State private var flashWork: DispatchWorkItem?
     @State private var pinchScale: CGFloat = 1
     @State private var pinchAccum: CGFloat = 0
     @State private var swipeDelta: CGFloat = 0
@@ -34,16 +32,25 @@ struct EasyLaunchPadView: View {
         return catalog.apps.filter { $0.name.localizedCaseInsensitiveContains(query) }
     }
 
+    /// 背景模糊强度与透明度直接对应：透明度 100% 时零模糊、桌面原样透出。
+    private var blurIntensity: Double {
+        min(1, (1 - settings.backgroundTransparency) * 1.4)
+    }
+
+    private var dimOpacity: Double {
+        (1 - settings.backgroundTransparency) * 0.55
+    }
+
     var body: some View {
         ZStack {
-            // 毛玻璃直接取窗口后面的桌面（GPU 合成），不读壁纸文件、无任何权限弹窗
-            Rectangle()
-                .fill(.regularMaterial)
+            // behindWindow 毛玻璃：GPU 取窗口后面的桌面实时模糊，
+            // 强度随透明度变化（100% 时无模糊），不读壁纸文件、无权限弹窗
+            DesktopBlurBackground(intensity: blurIntensity)
                 .ignoresSafeArea()
             LinearGradient(
                 colors: [
-                    .black.opacity(1 - settings.backgroundTransparency),
-                    .black.opacity((1 - settings.backgroundTransparency) * 0.75)
+                    .black.opacity(dimOpacity),
+                    .black.opacity(dimOpacity * 0.75)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -68,7 +75,6 @@ struct EasyLaunchPadView: View {
                     animationEnabled: settings.iconEntryAnimation,
                     dragEnabled: searchText.trimmingCharacters(in: .whitespaces).isEmpty,
                     dragAppID: dragAppID,
-                    flashAppID: flashAppID,
                     gridOriginPage: gridOrigin,
                     onGridOrigin: { gridOrigin = $0 },
                     onDragStart: handleDragStart,
@@ -122,9 +128,6 @@ struct EasyLaunchPadView: View {
             pageFlipWork?.cancel()
             pageFlipWork = nil
             pendingFlipDirection = nil
-            flashWork?.cancel()
-            flashWork = nil
-            flashAppID = nil
             dragAppID = nil
             reorderList = nil
         }
@@ -193,23 +196,15 @@ struct EasyLaunchPadView: View {
     }
 
     private func open(_ app: AppItem) {
-        // 拖拽刚结束的误触不触发启动
+        // 拖拽刚结束的误触不触发启动；按压反馈由图块按下样式提供
         guard Date().timeIntervalSince(lastDragEnd) > 0.25 else { return }
-        // 先闪光提示点击命中，再淡出窗口并异步启动应用：
-        // 目标应用启动慢或弹出对话框时，全屏遮罩立即消失，
-        // 不会卡在屏幕上盖住其他窗口的提示
-        flashWork?.cancel()
-        flashAppID = app.id
-        let work = DispatchWorkItem {
-            flashAppID = nil
-            controller.hide()
-            guard let url = app.url else { return }
-            let configuration = NSWorkspace.OpenConfiguration()
-            configuration.activates = true
-            NSWorkspace.shared.open(url, configuration: configuration, completionHandler: nil)
-        }
-        flashWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18, execute: work)
+        // 先淡出窗口再异步启动应用：目标应用启动慢或弹出对话框时，
+        // 全屏遮罩立即消失，不会卡在屏幕上盖住其他窗口的提示
+        controller.hide()
+        guard let url = app.url else { return }
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        NSWorkspace.shared.open(url, configuration: configuration, completionHandler: nil)
     }
 
     private func openSelected() {
@@ -448,5 +443,23 @@ struct EasyLaunchPadView: View {
                 }
             }
         }
+    }
+}
+
+/// 窗口后桌面的实时毛玻璃（behindWindow），alpha 值即模糊强度：
+/// 0 = 无模糊桌面原样透出，1 = 完全模糊。
+private struct DesktopBlurBackground: NSViewRepresentable {
+    let intensity: Double
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .underWindowBackground
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
+    }
+
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {
+        view.alphaValue = intensity
     }
 }

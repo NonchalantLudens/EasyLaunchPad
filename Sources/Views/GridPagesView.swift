@@ -22,7 +22,6 @@ struct GridPagesView: View {
     // 拖拽排序
     let dragEnabled: Bool
     let dragAppID: String?
-    let flashAppID: String?
     let gridOriginPage: CGPoint
     let onGridOrigin: (CGPoint) -> Void
     let onDragStart: (AppItem, CGPoint) -> Void
@@ -48,7 +47,6 @@ struct GridPagesView: View {
                         spaceName: "gridPage-\(index)",
                         dragEnabled: dragEnabled,
                         dragAppID: dragAppID,
-                        flashAppID: flashAppID,
                         gridOriginPage: gridOriginPage,
                         onDragStart: onDragStart,
                         onDragMove: onDragMove,
@@ -81,7 +79,6 @@ struct GridPageView: View {
     let spaceName: String
     let dragEnabled: Bool
     let dragAppID: String?
-    let flashAppID: String?
     let gridOriginPage: CGPoint
     let onDragStart: (AppItem, CGPoint) -> Void
     let onDragMove: (AppItem, CGPoint) -> Void
@@ -122,7 +119,6 @@ struct GridPageView: View {
                     onBadge: { onBadge(app) },
                     dragSpaceName: dragEnabled ? spaceName : nil,
                     isDragged: dragAppID == app.id,
-                    isFlashing: flashAppID == app.id,
                     reportsGridOrigin: index == 0,
                     slotCenterPage: geometry.slotCenter(index),
                     onDragStarted: dragEnabled ? { onDragStart(app, $0) } : nil,
