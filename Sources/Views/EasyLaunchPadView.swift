@@ -39,11 +39,15 @@ struct EasyLaunchPadView: View {
                 .fill(.regularMaterial)
                 .ignoresSafeArea()
             LinearGradient(
-                colors: [.black.opacity(0.4), .black.opacity(0.3)],
+                colors: [
+                    .black.opacity(settings.backgroundDim),
+                    .black.opacity(settings.backgroundDim * 0.75)
+                ],
                 startPoint: .top,
                 endPoint: .bottom
             )
             .ignoresSafeArea()
+            .animation(.easeInOut(duration: 0.2), value: settings.backgroundDim)
 
             VStack(spacing: 0) {
                 SearchBarView(text: $searchText, focused: $searchFocused)
@@ -328,9 +332,9 @@ struct EasyLaunchPadView: View {
 
         switch event.keyCode {
         case UInt16(kVK_LeftArrow):
-            switchPage(.left)
+            move(.left)
         case UInt16(kVK_RightArrow):
-            switchPage(.right)
+            move(.right)
         case UInt16(kVK_UpArrow):
             move(.up)
         case UInt16(kVK_DownArrow):

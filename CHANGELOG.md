@@ -2,6 +2,20 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.5.1] - 2026-09
+
+### Summary / 摘要
+
+Arrow keys now move the selected app icon across the grid (page-crossing included); a background dim slider is added to Settings. / 方向键改为在网格中移动选中的应用图标（可跨页）；设置页新增背景暗度滑条。
+
+### 新增 / Added
+
+- 设置 → 显示：新增「背景暗度」滑条（0–100%，默认 35%），实时生效并持久化 / Settings → Display: new background dim slider (0–100%, default 35%), live and persisted
+
+### 变更 / Changed
+
+- 方向键行为调整：左右上下键改为移动选中的图标（高亮框跟随，跨页自动翻页）；Enter 打开、Esc 退出不变；触控板/滚轮/分页圆点切页方式不变 / Arrow keys now move the selected icon (highlight follows, crossing pages auto-flips); Enter to open and Esc to close unchanged; trackpad/wheel/page-dot paging unchanged
+
 ## [2.5.0] - 2026-09
 
 ### Summary / 摘要

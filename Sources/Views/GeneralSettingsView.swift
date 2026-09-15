@@ -41,6 +41,16 @@ struct GeneralSettingsView: View {
                     .labelsHidden()
                     .frame(width: 220)
                 }
+                HStack {
+                    Text("背景暗度")
+                    Spacer()
+                    Slider(value: $settings.backgroundDim, in: 0...1)
+                        .frame(width: 190)
+                    Text("\(Int((settings.backgroundDim * 100).rounded()))%")
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .frame(width: 38, alignment: .trailing)
+                }
                 Toggle("图标入场动画", isOn: $settings.iconEntryAnimation)
                 Toggle("显示系统应用", isOn: $settings.showSystemApps)
                 Text("关闭后不扫描 /System/Applications；系统应用（如计算器）可按住 Option 按需隐藏。")

@@ -23,6 +23,16 @@ enum EasyLaunchPadStore {
         static let showSystemApps = "showSystemApps"
         static let autoCheckUpdates = "autoCheckUpdates"
         static let appOrder = "appOrder"
+        static let backgroundDim = "backgroundDim"
+    }
+
+    static func loadBackgroundDim() -> Double {
+        let value = defaults.double(forKey: Key.backgroundDim)
+        return (0...1).contains(value) ? value : 0.35
+    }
+
+    static func saveBackgroundDim(_ value: Double) {
+        defaults.set(value, forKey: Key.backgroundDim)
     }
 
     static func loadAppOrder() -> [String] {
