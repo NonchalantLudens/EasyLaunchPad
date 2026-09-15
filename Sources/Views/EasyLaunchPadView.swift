@@ -13,20 +13,16 @@ struct EasyLaunchPadView: View {
     @State private var pages: [[AppItem]] = []
     @State private var searchText = ""
     @State private var pendingActionApp: AppItem?
-    @State private var wallpaper: NSImage?
     @State private var pinchScale: CGFloat = 1
     @State private var pinchAccum: CGFloat = 0
     @State private var swipeDelta: CGFloat = 0
     @State private var lastWheelSwitch = Date.distantPast
-    // 拖拽排序状态
+    // 拖拽排序状态（跟随偏移由被拖图块局部管理，父视图只在换位/翻页时更新）
     @State private var reorderList: [AppItem]?
     @State private var dragAppID: String?
-    /// 指针到悬浮图标中心的固定偏移（抓取点保持不变，避免图标跳到指针下）。
-    @State private var dragGrabDelta: CGSize = .zero
-    @State private var dragLocation: CGPoint = .zero
-    @State private var dragIcon: NSImage?
-    @State private var gridOriginInfo = GridOriginInfo()
+    @State private var gridOrigin: CGPoint = .zero
     @State private var pageFlipWork: DispatchWorkItem?
+    @State private var pendingFlipDirection: GridDirection?
     @State private var lastDragEnd = Date.distantPast
     @FocusState private var searchFocused: Bool
 
@@ -38,12 +34,10 @@ struct EasyLaunchPadView: View {
 
     var body: some View {
         ZStack {
-            if let wallpaper {
-                Image(nsImage: wallpaper)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .ignoresSafeArea()
-            }
+            // 毛玻璃直接取窗口后面的桌面（GPU 合成），不读壁纸文件、无任何权限弹窗
+            Rectangle()
+                .fill(.regularMaterial)
+                .ignoresSafeArea()
             LinearGradient(
                 colors: [.black.opacity(0.4), .black.opacity(0.3)],
                 startPoint: .top,
@@ -68,7 +62,8 @@ struct EasyLaunchPadView: View {
                     animationEnabled: settings.iconEntryAnimation,
                     dragEnabled: searchText.trimmingCharacters(in: .whitespaces).isEmpty,
                     dragAppID: dragAppID,
-                    onGridOrigin: { gridOriginInfo = $0 },
+                    gridOriginPage: gridOrigin,
+                    onGridOrigin: { gridOrigin = $0 },
                     onDragStart: handleDragStart,
                     onDragMove: handleDragMove,
                     onDragEnd: handleDragEnd,
@@ -92,10 +87,6 @@ struct EasyLaunchPadView: View {
             .scaleEffect(appeared ? 1 * pinchScale : 0.98 * pinchScale)
         }
         .contentShape(Rectangle())
-        .coordinateSpace(name: "gridRoot")
-        .overlay(alignment: .center) {
-            dragFloatingIconOverlay
-        }
         .onTapGesture {
             controller.hide()
         }
@@ -106,12 +97,6 @@ struct EasyLaunchPadView: View {
             }
             controller.gestureHandler = { event in
                 handleGesture(event)
-            }
-            let screen = controller.currentScreen ?? NSScreen.main
-            if let screen {
-                WallpaperStore.shared.load(for: screen) { image in
-                    wallpaper = image
-                }
             }
             withAnimation(.easeOut(duration: 0.2)) {
                 appeared = true
@@ -124,9 +109,9 @@ struct EasyLaunchPadView: View {
             jiggleTimer = nil
             pageFlipWork?.cancel()
             pageFlipWork = nil
+            pendingFlipDirection = nil
             dragAppID = nil
             reorderList = nil
-            dragIcon = nil
         }
         .onChange(of: controller.deleteMode) { _, enabled in
             jiggleTimer?.invalidate()
@@ -219,15 +204,7 @@ struct EasyLaunchPadView: View {
             tileWidth: settings.iconSize.tileWidth,
             tileHeight: settings.iconSize.tileHeight,
             spacing: settings.iconSize.spacing,
-            origin: gridOriginInfo.page
-        )
-    }
-
-    /// 页面坐标空间 → 根坐标空间的平移量。
-    private var pageToRootOffset: CGSize {
-        CGSize(
-            width: gridOriginInfo.root.x - gridOriginInfo.page.x,
-            height: gridOriginInfo.root.y - gridOriginInfo.page.y
+            origin: gridOrigin
         )
     }
 
@@ -235,87 +212,47 @@ struct EasyLaunchPadView: View {
         // 搜索过滤时列表不是完整集合，禁用拖拽排序
         guard searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         let source = catalog.apps
-        guard let from = source.firstIndex(where: { $0.id == app.id }) else { return }
+        guard source.contains(where: { $0.id == app.id }) else { return }
         reorderList = source
         dragAppID = app.id
-        dragLocation = location
-        // 记录抓取偏移：悬浮图标中心 = 指针 + 固定偏移，抓哪算哪不跳位
-        let perPage = max(1, controller.gridLayout.perPage)
-        let center = gridGeometry.slotCenter(from % perPage)
-        dragGrabDelta = CGSize(width: center.x - location.x, height: center.y - location.y)
-        dragIcon = nil
-        let url = app.url
-        Task { dragIcon = await IconStore.shared.icon(for: url) }
     }
 
     private func handleDragMove(_ app: AppItem, at location: CGPoint) {
         guard var list = reorderList, let dragID = dragAppID else { return }
-        dragLocation = location
         schedulePageFlip(at: location)
         let geo = gridGeometry
         let perPage = max(1, controller.gridLayout.perPage)
         guard let from = list.firstIndex(where: { $0.id == dragID }) else { return }
-        // 命中其他槽位则实时换位，其余图标动画补位；
-        // 拖动中的图标由悬浮层即时跟随，不受网格动画影响
+        // 命中其他槽位则换位。必须瞬时完成（无动画）：
+        // 被拖图块的位置 = 槽位中心 + 跟随偏移，布局与偏移同帧更新，
+        // 指针与图标才不会错位；跟随偏移由图块局部状态自管
         if let slot = geo.slotIndex(at: location, maxSlots: list.count) {
             let target = min(selection.pageIndex * perPage + slot, list.count - 1)
             if target != from {
-                withAnimation(.easeInOut(duration: 0.16)) {
-                    let item = list.remove(at: from)
-                    list.insert(item, at: min(target, list.count))
-                    reorderList = list
-                    rebuildPages(apps: list)
-                }
+                let item = list.remove(at: from)
+                list.insert(item, at: min(target, list.count))
+                reorderList = list
+                rebuildPages(apps: list)
             }
         }
     }
 
     private func handleDragEnd(_ app: AppItem, at location: CGPoint) {
-        pageFlipWork?.cancel()
-        pageFlipWork = nil
+        cancelPageFlip()
         lastDragEnd = Date()
         guard let list = reorderList, dragAppID != nil else {
             dragAppID = nil
-            dragIcon = nil
             reorderList = nil
             return
         }
         dragAppID = nil
-        dragIcon = nil
         reorderList = nil
         // 落盘并发布新顺序；onReceive 会以动画重建页面
         catalog.applyOrder(list.map(\.id))
     }
 
-    /// 拖动中的悬浮图标：即时跟随指针 + 抓取偏移，与网格动画完全解耦。
-    @ViewBuilder
-    private var dragFloatingIconOverlay: some View {
-        if let dragAppID, let app = reorderList?.first(where: { $0.id == dragAppID }) {
-            let offset = pageToRootOffset
-            ZStack {
-                if let dragIcon {
-                    Image(nsImage: dragIcon)
-                        .resizable()
-                        .frame(width: settings.iconSize.iconPoint, height: settings.iconSize.iconPoint)
-                        .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
-                } else {
-                    RoundedRectangle(cornerRadius: settings.iconSize.iconCornerRadius - 4, style: .continuous)
-                        .fill(.white.opacity(0.12))
-                        .frame(width: settings.iconSize.iconPoint, height: settings.iconSize.iconPoint)
-                }
-            }
-            .scaleEffect(1.05)
-            .position(
-                x: dragLocation.x + offset.width + dragGrabDelta.width,
-                y: dragLocation.y + offset.height + dragGrabDelta.height
-            )
-        }
-    }
-
-    /// 拖到屏幕左右边缘停留时自动翻页。
+    /// 拖到屏幕左右边缘停留时自动翻页（进入/离开边缘区域才重新排定，避免高频状态写入）。
     private func schedulePageFlip(at location: CGPoint) {
-        pageFlipWork?.cancel()
-        pageFlipWork = nil
         let screenWidth = controller.currentScreen?.frame.width ?? 0
         let direction: GridDirection?
         if location.x < 60 {
@@ -325,6 +262,9 @@ struct EasyLaunchPadView: View {
         } else {
             direction = nil
         }
+        guard direction != pendingFlipDirection else { return }
+        cancelPageFlip()
+        pendingFlipDirection = direction
         guard let direction else { return }
         let work = DispatchWorkItem {
             withAnimation(.easeInOut(duration: 0.18)) {
@@ -333,6 +273,12 @@ struct EasyLaunchPadView: View {
         }
         pageFlipWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.7, execute: work)
+    }
+
+    private func cancelPageFlip() {
+        pageFlipWork?.cancel()
+        pageFlipWork = nil
+        pendingFlipDirection = nil
     }
 
     private func move(_ direction: GridDirection) {

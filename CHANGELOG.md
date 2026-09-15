@@ -2,6 +2,27 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.4.2] - 2026-09
+
+### Summary / 摘要
+
+Fixed the app quitting when the launcher hides, the repeated "access data from other apps" permission prompt, first-launch not showing the launcher, and rebuilt icon dragging with simpler and exact pointer tracking. / 修复启动器隐藏后 App 退出、每次启动弹「访问其他 App 数据」权限、首次启动不出全屏的问题；以更简单的实现重建图标拖拽。
+
+### 修复 / Fixed
+
+- 点击空白处隐藏启动器后 App 不再退出：声明「最后窗口关闭不终止」，恢复 Settings 场景 / The app no longer quits when the launcher hides: declares "don't terminate after last window closed" and restores the Settings scene
+- 不再弹出「访问其他 App 的数据」权限：移除壁纸文件读取管线（系统动态壁纸资产属于受保护数据，每次启动读取都会触发 TCC 弹窗），背景改用系统毛玻璃材质（GPU 直接对桌面实时模糊，零文件访问） / Removes the repeated "access data from other apps" prompt: the wallpaper file pipeline is gone (system wallpaper assets are protected data); the background now uses the native material blur (GPU-composited, zero file access)
+- 首次启动直接呼出全屏启动器（登录自启场景除外） / The launcher opens fullscreen on first manual launch (except login-item launches)
+
+### 性能 / Performance
+
+- 壁纸不再解码 + 高斯模糊（每次启动的 CIImage 管线删除），呼出更轻快 / No more per-launch wallpaper decode + Gaussian blur; snappier open
+- 拖动跟随偏移改为图块局部状态：指针移动只重渲染被拖图块，不再整网格刷新；边缘翻页仅在进入/离开边缘区域时写入状态 / Drag follow offset is now tile-local state: pointer moves re-render only the dragged tile; page-flip state writes only on edge-zone enter/leave
+
+### 变更 / Changed
+
+- 图标拖拽实现大幅简化：删除悬浮层与跨坐标空间换算机制；拖动中的图标以固定抓取偏移瞬时跟随指针（换位无动画，指针与图标始终贴合） / Icon dragging greatly simplified: the floating overlay and cross-space conversion mechanism are gone; the dragged icon tracks the pointer instantly with a constant grab offset (instant reordering, pointer always aligned)
+
 ## [2.4.1] - 2026-09
 
 ### Summary / 摘要

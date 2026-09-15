@@ -28,6 +28,8 @@ struct IconTileView: View {
     var dragSpaceName: String? = nil
     var isDragged: Bool = false
     var reportsGridOrigin: Bool = false
+    /// 图块中心在页面坐标空间中的位置（换位后由父视图更新）。
+    var slotCenterPage: CGPoint = .zero
     var onDragStarted: ((CGPoint) -> Void)? = nil
     var onDragMoved: ((CGPoint) -> Void)? = nil
     var onDragEnded: ((CGPoint) -> Void)? = nil
@@ -37,6 +39,10 @@ struct IconTileView: View {
     @State private var cachedHighlight: String?
     @State private var cachedAttributed: AttributedString?
     @State private var dragging = false
+    /// 指针到图块中心的固定偏移：抓哪算哪，拖动全程保持。
+    @State private var grabDelta: CGSize = .zero
+    @State private var lastLocation: CGPoint = .zero
+    @State private var followOffset: CGSize = .zero
 
     private var attributedName: AttributedString {
         if let cachedAttributed, cachedName == app.name, cachedHighlight == highlight {
@@ -94,8 +100,8 @@ struct IconTileView: View {
         .background { gridOriginReader }
         .rotationEffect(.degrees(jiggle))
         .offset(x: jiggle * 0.55)
-        // 拖动中的图块隐形：视觉由悬浮图标负责，网格只保留空位
-        .opacity(isDragged ? 0 : (entered ? 1 : 0))
+        .offset(followOffset)
+        .opacity(entered ? 1 : 0)
         .offset(y: entered ? 0 : 40)
         .scaleEffect(entered ? 1 : 0.85)
         .zIndex(isDragged ? 1 : 0)
@@ -107,22 +113,32 @@ struct IconTileView: View {
         )
         .transition(.scale(scale: 0.6).combined(with: .opacity))
         .simultaneousGesture(dragGesture)
+        .onChange(of: slotCenterPage) { _, newCenter in
+            // 换位后布局位置变化，用当前指针位置重算偏移，抓取点保持不动
+            guard dragging else { return }
+            followOffset = followOffset(for: lastLocation, center: newCenter)
+        }
         .task(id: app.id) {
             icon = await IconStore.shared.icon(for: app.url)
         }
     }
 
-    /// 首个图块上报自身原点：页面坐标空间（命中测试）与根坐标空间（悬浮图标定位）。
+    private func followOffset(for location: CGPoint, center: CGPoint) -> CGSize {
+        CGSize(
+            width: location.x + grabDelta.width - center.x,
+            height: location.y + grabDelta.height - center.y
+        )
+    }
+
+    /// 首个图块上报自身在页面坐标空间中的原点，供命中测试定位网格。
+    /// 各页布局一致，页面空间原点全页相同。
     @ViewBuilder
     private var gridOriginReader: some View {
         if reportsGridOrigin, let name = dragSpaceName {
             GeometryReader { geo in
                 Color.clear.preference(
-                    key: GridOriginInfoKey.self,
-                    value: GridOriginInfo(
-                        page: geo.frame(in: .named(name)).origin,
-                        root: geo.frame(in: .named("gridRoot")).origin
-                    )
+                    key: GridOriginKey.self,
+                    value: geo.frame(in: .named(name)).origin
                 )
             }
         }
@@ -132,16 +148,22 @@ struct IconTileView: View {
         DragGesture(minimumDistance: 8, coordinateSpace: .named(dragSpaceName ?? "gridPage"))
             .onChanged { value in
                 guard onDragStarted != nil else { return }
-                if dragging {
-                    onDragMoved?(value.location)
-                } else {
+                if !dragging {
                     dragging = true
+                    grabDelta = CGSize(
+                        width: slotCenterPage.x - value.location.x,
+                        height: slotCenterPage.y - value.location.y
+                    )
                     onDragStarted?(value.location)
                 }
+                lastLocation = value.location
+                followOffset = followOffset(for: value.location, center: slotCenterPage)
+                onDragMoved?(value.location)
             }
             .onEnded { value in
                 guard dragging else { return }
                 dragging = false
+                followOffset = .zero
                 onDragEnded?(value.location)
             }
     }

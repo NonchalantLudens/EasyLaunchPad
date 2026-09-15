@@ -1,14 +1,10 @@
 import SwiftUI
 
-/// 首个图块的原点信息：页面坐标空间（命中测试用）与根坐标空间（悬浮图标定位用）。
-struct GridOriginInfo: Equatable {
-    var page: CGPoint = .zero
-    var root: CGPoint = .zero
-}
-
-struct GridOriginInfoKey: PreferenceKey {
-    static var defaultValue = GridOriginInfo()
-    static func reduce(value: inout GridOriginInfo, nextValue: () -> GridOriginInfo) {
+/// 首个图块在页面坐标空间中的原点（拖拽命中测试用）。
+/// 各页布局一致，该值全页相同。
+struct GridOriginKey: PreferenceKey {
+    static var defaultValue: CGPoint = .zero
+    static func reduce(value: inout CGPoint, nextValue: () -> CGPoint) {
         value = nextValue()
     }
 }
@@ -26,7 +22,8 @@ struct GridPagesView: View {
     // 拖拽排序
     let dragEnabled: Bool
     let dragAppID: String?
-    let onGridOrigin: (GridOriginInfo) -> Void
+    let gridOriginPage: CGPoint
+    let onGridOrigin: (CGPoint) -> Void
     let onDragStart: (AppItem, CGPoint) -> Void
     let onDragMove: (AppItem, CGPoint) -> Void
     let onDragEnd: (AppItem, CGPoint) -> Void
@@ -50,6 +47,7 @@ struct GridPagesView: View {
                         spaceName: "gridPage-\(index)",
                         dragEnabled: dragEnabled,
                         dragAppID: dragAppID,
+                        gridOriginPage: gridOriginPage,
                         onDragStart: onDragStart,
                         onDragMove: onDragMove,
                         onDragEnd: onDragEnd,
@@ -64,7 +62,7 @@ struct GridPagesView: View {
             .offset(x: -CGFloat(selection.pageIndex) * geo.size.width)
             .animation(.easeInOut(duration: 0.18), value: selection.pageIndex)
         }
-        .onPreferenceChange(GridOriginInfoKey.self) { onGridOrigin($0) }
+        .onPreferenceChange(GridOriginKey.self) { onGridOrigin($0) }
     }
 }
 
@@ -81,12 +79,23 @@ struct GridPageView: View {
     let spaceName: String
     let dragEnabled: Bool
     let dragAppID: String?
+    let gridOriginPage: CGPoint
     let onDragStart: (AppItem, CGPoint) -> Void
     let onDragMove: (AppItem, CGPoint) -> Void
     let onDragEnd: (AppItem, CGPoint) -> Void
     let selectedIndex: Int?
     let onSelect: (AppItem) -> Void
     let onBadge: (AppItem) -> Void
+
+    private var geometry: GridGeometry {
+        GridGeometry(
+            columns: columns,
+            tileWidth: size.tileWidth,
+            tileHeight: size.tileHeight,
+            spacing: size.spacing,
+            origin: gridOriginPage
+        )
+    }
 
     var body: some View {
         LazyVGrid(
@@ -111,6 +120,7 @@ struct GridPageView: View {
                     dragSpaceName: dragEnabled ? spaceName : nil,
                     isDragged: dragAppID == app.id,
                     reportsGridOrigin: index == 0,
+                    slotCenterPage: geometry.slotCenter(index),
                     onDragStarted: dragEnabled ? { onDragStart(app, $0) } : nil,
                     onDragMoved: dragEnabled ? { onDragMove(app, $0) } : nil,
                     onDragEnded: dragEnabled ? { onDragEnd(app, $0) } : nil

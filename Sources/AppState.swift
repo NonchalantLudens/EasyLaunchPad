@@ -18,7 +18,6 @@ final class AppState: ObservableObject {
     init() {
         catalog.refresh()
         catalog.startMonitoring()
-        WallpaperStore.shared.preloadMainScreen()
         if settings.autoCheckUpdates {
             updateManager.startAutoCheck()
         }

@@ -62,8 +62,8 @@ final class EasyLaunchPadController: ObservableObject {
                 defer: false,
                 screen: target
             )
-            window.isOpaque = true
-            window.backgroundColor = NSColor(calibratedWhite: 0.08, alpha: 1)
+            window.isOpaque = false
+            window.backgroundColor = .clear
             window.hasShadow = false
             window.level = .screenSaver
             window.collectionBehavior = [.canJoinAllSpaces, .stationary]
