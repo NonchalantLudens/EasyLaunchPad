@@ -31,9 +31,9 @@ final class EasyLaunchPadSettings: ObservableObject {
     @Published var autoCheckUpdates: Bool {
         didSet { EasyLaunchPadStore.saveAutoCheckUpdates(autoCheckUpdates) }
     }
-    /// 启动器背景压暗程度（0 = 不压暗，1 = 最暗）。
-    @Published var backgroundDim: Double {
-        didSet { EasyLaunchPadStore.saveBackgroundDim(backgroundDim) }
+    /// 启动器背景透明度（0 = 完全不透明最暗，1 = 完全透明）。
+    @Published var backgroundTransparency: Double {
+        didSet { EasyLaunchPadStore.saveBackgroundTransparency(backgroundTransparency) }
     }
 
     /// Set by AppState when RegisterEventHotKey fails (conflict with another app).
@@ -51,7 +51,7 @@ final class EasyLaunchPadSettings: ObservableObject {
         iconEntryAnimation = EasyLaunchPadStore.loadIconEntryAnimation()
         showSystemApps = EasyLaunchPadStore.loadShowSystemApps()
         autoCheckUpdates = EasyLaunchPadStore.loadAutoCheckUpdates()
-        backgroundDim = EasyLaunchPadStore.loadBackgroundDim()
+        backgroundTransparency = EasyLaunchPadStore.loadBackgroundTransparency()
     }
 
     func autoStartStatusText() -> String {

@@ -13,6 +13,8 @@ struct EasyLaunchPadView: View {
     @State private var pages: [[AppItem]] = []
     @State private var searchText = ""
     @State private var pendingActionApp: AppItem?
+    @State private var flashAppID: String?
+    @State private var flashWork: DispatchWorkItem?
     @State private var pinchScale: CGFloat = 1
     @State private var pinchAccum: CGFloat = 0
     @State private var swipeDelta: CGFloat = 0
@@ -40,14 +42,14 @@ struct EasyLaunchPadView: View {
                 .ignoresSafeArea()
             LinearGradient(
                 colors: [
-                    .black.opacity(settings.backgroundDim),
-                    .black.opacity(settings.backgroundDim * 0.75)
+                    .black.opacity(1 - settings.backgroundTransparency),
+                    .black.opacity((1 - settings.backgroundTransparency) * 0.75)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
             .ignoresSafeArea()
-            .animation(.easeInOut(duration: 0.2), value: settings.backgroundDim)
+            .animation(.easeInOut(duration: 0.2), value: settings.backgroundTransparency)
 
             VStack(spacing: 0) {
                 SearchBarView(text: $searchText, focused: $searchFocused)
@@ -66,6 +68,7 @@ struct EasyLaunchPadView: View {
                     animationEnabled: settings.iconEntryAnimation,
                     dragEnabled: searchText.trimmingCharacters(in: .whitespaces).isEmpty,
                     dragAppID: dragAppID,
+                    flashAppID: flashAppID,
                     gridOriginPage: gridOrigin,
                     onGridOrigin: { gridOrigin = $0 },
                     onDragStart: handleDragStart,
@@ -119,6 +122,9 @@ struct EasyLaunchPadView: View {
             pageFlipWork?.cancel()
             pageFlipWork = nil
             pendingFlipDirection = nil
+            flashWork?.cancel()
+            flashWork = nil
+            flashAppID = nil
             dragAppID = nil
             reorderList = nil
         }
@@ -189,13 +195,21 @@ struct EasyLaunchPadView: View {
     private func open(_ app: AppItem) {
         // 拖拽刚结束的误触不触发启动
         guard Date().timeIntervalSince(lastDragEnd) > 0.25 else { return }
-        // 先淡出窗口再异步启动应用：目标应用启动慢或弹出对话框时，
-        // 全屏遮罩立即消失，不会卡在屏幕上盖住其他窗口的提示
-        controller.hide()
-        guard let url = app.url else { return }
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.activates = true
-        NSWorkspace.shared.open(url, configuration: configuration, completionHandler: nil)
+        // 先闪光提示点击命中，再淡出窗口并异步启动应用：
+        // 目标应用启动慢或弹出对话框时，全屏遮罩立即消失，
+        // 不会卡在屏幕上盖住其他窗口的提示
+        flashWork?.cancel()
+        flashAppID = app.id
+        let work = DispatchWorkItem {
+            flashAppID = nil
+            controller.hide()
+            guard let url = app.url else { return }
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.activates = true
+            NSWorkspace.shared.open(url, configuration: configuration, completionHandler: nil)
+        }
+        flashWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18, execute: work)
     }
 
     private func openSelected() {

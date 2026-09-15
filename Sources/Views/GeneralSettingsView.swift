@@ -41,15 +41,16 @@ struct GeneralSettingsView: View {
                     .labelsHidden()
                     .frame(width: 220)
                 }
-                HStack {
-                    Text("背景暗度")
-                    Spacer()
-                    Slider(value: $settings.backgroundDim, in: 0...1)
-                        .frame(width: 190)
-                    Text("\(Int((settings.backgroundDim * 100).rounded()))%")
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                        .frame(width: 38, alignment: .trailing)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("背景透明度")
+                        Spacer()
+                        Text("\(Int((settings.backgroundTransparency * 100).rounded()))%")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                    Slider(value: $settings.backgroundTransparency, in: 0...1)
+                    backgroundPreview
                 }
                 Toggle("图标入场动画", isOn: $settings.iconEntryAnimation)
                 Toggle("显示系统应用", isOn: $settings.showSystemApps)
@@ -95,6 +96,38 @@ struct GeneralSettingsView: View {
         .onChange(of: settings.autoStart) { _, _ in
             statusText = settings.autoStartStatusText()
         }
+    }
+
+    /// 背景样式预览：毛玻璃 + 当前透明度的压暗遮罩 + 图标示意。
+    @ViewBuilder
+    private var backgroundPreview: some View {
+        let dim = 1 - settings.backgroundTransparency
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .fill(.regularMaterial)
+            .overlay(
+                LinearGradient(
+                    colors: [.black.opacity(dim), .black.opacity(dim * 0.75)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .overlay(
+                HStack(spacing: 10) {
+                    Image(nsImage: NSApp.applicationIconImage)
+                        .resizable()
+                        .frame(width: 36, height: 36)
+                    Text("EasyLaunchPad")
+                        .font(.callout)
+                        .foregroundStyle(.white)
+                }
+            )
+            .frame(height: 80)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(.quaternary, lineWidth: 1)
+            )
+            .animation(.easeInOut(duration: 0.2), value: settings.backgroundTransparency)
     }
 
     @ViewBuilder

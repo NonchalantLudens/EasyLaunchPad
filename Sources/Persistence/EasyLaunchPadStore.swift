@@ -23,16 +23,26 @@ enum EasyLaunchPadStore {
         static let showSystemApps = "showSystemApps"
         static let autoCheckUpdates = "autoCheckUpdates"
         static let appOrder = "appOrder"
+        static let backgroundTransparency = "backgroundTransparency"
         static let backgroundDim = "backgroundDim"
     }
 
-    static func loadBackgroundDim() -> Double {
-        let value = defaults.double(forKey: Key.backgroundDim)
-        return (0...1).contains(value) ? value : 0.35
+    /// 背景透明度（0 = 完全不透明最暗，1 = 完全透明）。
+    /// 兼容迁移旧版「暗度」值（dim = 1 - transparency）。
+    static func loadBackgroundTransparency() -> Double {
+        if defaults.object(forKey: Key.backgroundTransparency) != nil {
+            let value = defaults.double(forKey: Key.backgroundTransparency)
+            return (0...1).contains(value) ? value : 0.65
+        }
+        if defaults.object(forKey: Key.backgroundDim) != nil {
+            let dim = defaults.double(forKey: Key.backgroundDim)
+            return (0...1).contains(dim) ? 1 - dim : 0.65
+        }
+        return 0.65
     }
 
-    static func saveBackgroundDim(_ value: Double) {
-        defaults.set(value, forKey: Key.backgroundDim)
+    static func saveBackgroundTransparency(_ value: Double) {
+        defaults.set(value, forKey: Key.backgroundTransparency)
     }
 
     static func loadAppOrder() -> [String] {

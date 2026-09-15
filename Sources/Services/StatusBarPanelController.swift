@@ -10,6 +10,9 @@ final class StatusBarPanelController: NSObject, ObservableObject {
 
     @Published private(set) var isPanelVisible = false
 
+    /// 上次切换时间：状态按钮的按下/抬起可能各触发一次 action，去抖防止关了又弹。
+    private var lastToggleAt: CFAbsoluteTime = 0
+
     private var statusItem: NSStatusItem?
     private var panel: NSPanel?
     private var outsideClickMonitor: Any?
@@ -44,7 +47,15 @@ final class StatusBarPanelController: NSObject, ObservableObject {
     }
 
     @objc private func statusButtonClicked() {
-        isPanelVisible ? hide() : show()
+        let now = CFAbsoluteTimeGetCurrent()
+        guard now - lastToggleAt > 0.2 else { return }
+        lastToggleAt = now
+        // 以窗口实际可见性为准，不依赖簿记状态
+        if panel?.isVisible == true {
+            hide()
+        } else {
+            show()
+        }
     }
 
     func show() {

@@ -2,6 +2,21 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.5.2] - 2026-09
+
+### Summary / 摘要
+
+The background slider is now transparency-based with a live style preview in Settings; the menu bar panel reliably toggles closed on a second click; clicking an icon shows a flash feedback before launching. / 背景滑条改为透明度语义并在设置页提供样式预览；菜单栏面板二次点击可靠关闭；点击图标先闪光反馈再启动。
+
+### 新增 / Added
+
+- 设置 → 显示：「背景暗度」更名为「**背景透明度**」（0% = 最暗，100% = 完全透明，默认 65%），并新增**样式预览**卡片，滑动实时预览压暗效果；自动迁移旧设置值 / The background slider is now "Background Transparency" with a live preview card; old values migrate automatically
+- 点击图标后先**闪光反馈**再淡出启动，点击命中一目了然 / Clicking an icon flashes it before launching for clear hit feedback
+
+### 修复 / Fixed
+
+- 菜单栏图标**第二次点击可靠关闭面板**：以面板实际可见性为切换依据，并对按下/抬起的重复触发去抖 / A second click on the menu bar icon now reliably closes the panel: toggling is based on actual panel visibility with double-fire debounce
+
 ## [2.5.1] - 2026-09
 
 ### Summary / 摘要

@@ -27,6 +27,7 @@ struct IconTileView: View {
     // 拖拽排序（未启用时回调为 nil，不参与布局）
     var dragSpaceName: String? = nil
     var isDragged: Bool = false
+    var isFlashing: Bool = false
     var reportsGridOrigin: Bool = false
     /// 图块中心在页面坐标空间中的位置（换位后由父视图更新）。
     var slotCenterPage: CGPoint = .zero
@@ -98,6 +99,15 @@ struct IconTileView: View {
             }
         }
         .background { gridOriginReader }
+        .overlay {
+            // 点击命中的闪光反馈
+            if isFlashing {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(.white.opacity(0.35))
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeIn(duration: 0.08), value: isFlashing)
         .rotationEffect(.degrees(jiggle))
         .offset(x: jiggle * 0.55)
         .offset(followOffset)
